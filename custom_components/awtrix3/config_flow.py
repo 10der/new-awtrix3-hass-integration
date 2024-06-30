@@ -117,7 +117,6 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="configure",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=conf(CONF_NAME)): str,
                     vol.Required(CONF_HOST, default=conf(CONF_HOST)): str,
                     vol.Optional(CONF_USERNAME, default=conf(CONF_USERNAME, "")): str,
                     vol.Optional(CONF_PASSWORD, default=conf(CONF_PASSWORD, "")): str,
@@ -141,7 +140,7 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            info = api.device_info()
+            info = await api.device_info()
             if info is None:
                 raise AbortFlow(reason="no_device_info")
 
@@ -153,7 +152,7 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(
                     updates={
                         CONF_HOST: self.awtrix_config[CONF_HOST],
-                        CONF_NAME: self.awtrix_config[CONF_NAME],
+                        CONF_NAME: self.device_id,
                         CONF_USERNAME: self.awtrix_config[CONF_USERNAME],
                         CONF_PASSWORD: self.awtrix_config[CONF_PASSWORD],
                     }
