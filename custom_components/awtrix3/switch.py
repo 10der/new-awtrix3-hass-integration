@@ -74,6 +74,6 @@ class AwtrixSwitch(SwitchEntity, AwtrixEntity):
 
     @property
     def state(self) -> str:
-        """Return if Camera Motion is enabled."""
+        """Return state."""
         value = getattr(self.coordinator.data, self.key, None)
         return "on" if value else "off"
