@@ -1,0 +1,137 @@
+"""awtrix_api.py: Awtrix API for Awtrix integration."""
+import logging
+
+import aiohttp
+
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .models import AwtrixData
+
+_LOGGER = logging.getLogger(__name__)
+
+class AwtrixAPI:
+    """Awtrix device API."""
+
+    def __init__(self, hass, host, port, username, password):
+        """Init Awtrix."""
+
+        self.hass = hass
+        self.host = host
+        self.port = port
+        self.username = username
+        self.password = password
+
+    async def device_set_item_value(self, key, value):
+        """Set device item value info."""
+
+        try:
+            auth = aiohttp.BasicAuth(self.username, self.password)
+            response = await async_get_clientsession(self.hass).post(
+                "http://" + self.host + "/api/" + key,
+                timeout=10,
+                auth=auth,
+                json=value
+            )
+            if response.status in (401, 403):
+                _LOGGER.warning("Error %s: authentication failed", self.host)
+                raise AuthenticationFailed()
+
+            if response.status != 200:
+                return None
+
+            return True
+        except TimeoutError:
+            _LOGGER.warning("Error fetching %s: timeout", self.host)
+
+        raise CannotConnect()
+
+    async def device_info(self):
+        """Get device info."""
+
+        try:
+            auth = aiohttp.BasicAuth(self.username, self.password)
+            response = await async_get_clientsession(self.hass).get(
+                "http://" + self.host + "/api/" + "stats",
+                timeout=10,
+                auth=auth
+            )
+            if response.status in (401, 403):
+                _LOGGER.warning("Error %s: authentication failed", self.host)
+                raise AuthenticationFailed()
+
+            if response.status != 200:
+                return None
+
+            return await response.json()
+        except TimeoutError:
+            _LOGGER.warning("Error fetching %s: timeout", self.host)
+
+        #raise CannotConnect()
+        return None
+
+    async def device_config(self):
+        """Get device config."""
+
+        try:
+            auth = aiohttp.BasicAuth(self.username, self.password)
+            response = await async_get_clientsession(self.hass).get(
+                "http://" + self.host + "/api/" + "settings",
+                timeout=10,
+                auth=auth
+            )
+            if response.status in (401, 403):
+                _LOGGER.warning("Error %s: authentication failed", self.host)
+                raise AuthenticationFailed()
+
+            if response.status != 200:
+                return None
+
+            return await response.json()
+        except TimeoutError:
+            _LOGGER.warning("Error fetching %s: timeout", self.host)
+
+        #raise CannotConnect()
+        return None
+
+    async def get_data(self) -> AwtrixData:
+        """Get all actual data from device."""
+        stats = await self.device_info()
+        if stats is None:
+            stats = {}
+
+        config = await self.device_config()
+        if config is None:
+            config = {}
+
+        data = AwtrixData()
+        data.bat = stats.get("bat")
+        data.bat_raw = stats.get("bat_raw")
+        data.type = stats.get("type")
+        data.lux = stats.get("lux")
+        data.ldr_raw = stats.get("ldr_raw")
+        data.ram = stats.get("ram")
+        data.bri = stats.get("bri")
+        data.temp = stats.get("temp")
+        data.hum = stats.get("hum")
+        data.uptime = stats.get("uptime")
+        data.wifi_signal = stats.get("wifi_signal")
+        data.messages = stats.get("messages")
+        data.version = stats.get("version")
+        data.indicator1 = stats.get("indicator1")
+        data.indicator2 = stats.get("indicator2")
+        data.indicator3 = stats.get("indicator3")
+        data.app = stats.get("app")
+        data.uid = stats.get("uid")
+        data.matrix = stats.get("matrix")
+        data.ip_address = stats.get("ip_address")
+
+        data.abri = config.get("ABRI")
+        data.atrans = config.get("ATRANS")
+
+        return data
+
+class CannotConnect(Exception):
+    """Error to indicate we cannot connect."""
+
+class AuthenticationFailed(Exception):
+    """Exception to indicate authentication failure."""
