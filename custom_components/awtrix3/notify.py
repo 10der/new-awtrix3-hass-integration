@@ -7,12 +7,13 @@ import logging
 from PIL import Image
 import requests
 
-from config.custom_components.awtrix.awtrix_api import AwtrixAPI
 from homeassistant.components.notify import BaseNotificationService
 from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .awtrix_api import AwtrixAPI
 
 _LOGGER = logging.getLogger(__name__)
 

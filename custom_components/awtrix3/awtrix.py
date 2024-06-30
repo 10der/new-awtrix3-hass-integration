@@ -2,16 +2,12 @@
 
 import base64
 from io import BytesIO
-import json
 import logging
 
-import aiohttp
-from aiohttp.hdrs import AUTHORIZATION
 from PIL import Image
 import requests
 
-from config.custom_components.awtrix.awtrix_api import AwtrixAPI
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from .awtrix_api import AwtrixAPI
 
 """Support for AWTRIX service."""
 

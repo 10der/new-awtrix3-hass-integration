@@ -1,13 +1,13 @@
 """Demo platform that offers a fake button entity."""
 from __future__ import annotations
 
-from config.custom_components.awtrix.coordinator import AwtrixCoordinator
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .coordinator import AwtrixCoordinator
 from .entity import AwtrixEntity
 
 

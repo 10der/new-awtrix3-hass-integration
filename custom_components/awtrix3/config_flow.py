@@ -111,7 +111,6 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.awtrix_config.get(name, default)
 
         # Username and Password are optional and default empty
-        # due to some cameras not allowing you to change AWTRIX user settings.
         # See https://github.com/home-assistant/core/issues/39182
         # and https://github.com/home-assistant/core/issues/35904
         return self.async_show_form(

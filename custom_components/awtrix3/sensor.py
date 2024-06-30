@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from config.custom_components.awtrix.coordinator import AwtrixCoordinator
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -16,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
+from .coordinator import AwtrixCoordinator
 from .entity import AwtrixEntity
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
