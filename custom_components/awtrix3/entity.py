@@ -22,7 +22,7 @@ class AwtrixEntity(CoordinatorEntity[AwtrixCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.data.uid)},
             name=self.coordinator.data.uid,
-            model="AWTRIX3",
+            model="AWTRIX 3",
             sw_version=self.coordinator.data.version,
             manufacturer="Blueforcer",
             configuration_url=f"http://{self.coordinator.data.ip_address}",
