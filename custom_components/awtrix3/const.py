@@ -31,46 +31,47 @@ SERVICES = [
 
 SERVICE_DATA = "data"
 SERVICE_APP_NAME = "name"
+CONF_DEVICE_ID = "device"
 
 # Schemas
-SERVICE_PUSH_APP_DATA_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(SERVICE_APP_NAME): str,
-            vol.Required(SERVICE_DATA, default={}): dict,
-        }
-    ),
-    cv.has_at_least_one_key(SERVICE_APP_NAME),
+SERVICE_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DEVICE_ID): cv.string,
+    },
 )
 
-SERVICE_SWITCH_APP_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(SERVICE_APP_NAME): str,
-        }
-    ),
-    cv.has_at_least_one_key(SERVICE_APP_NAME),
+SERVICE_PUSH_APP_DATA_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+        vol.Required(SERVICE_APP_NAME): str,
+        vol.Required(SERVICE_DATA, default={}): dict
+    },
+    # cv.has_at_least_one_key(SERVICE_APP_NAME),
 )
 
-SERVICE_RTTTL_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(SERVICE_RTTTL): str,
-        }
-    ),
-    cv.has_at_least_one_key(SERVICE_RTTTL),
+SERVICE_SWITCH_APP_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+        vol.Required(SERVICE_APP_NAME): str,
+    },
+    # cv.has_at_least_one_key(SERVICE_APP_NAME),
 )
 
-SERVICE_SOUND_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(SERVICE_SOUND): str,
-        }
-    ),
-    cv.has_at_least_one_key(SERVICE_SOUND),
+SERVICE_RTTTL_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+        vol.Required(SERVICE_RTTTL): str,
+    },
+    # cv.has_at_least_one_key(SERVICE_RTTTL),
 )
 
-SERVICE_SETTINGS_SCHEMA = vol.All(
+SERVICE_SOUND_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+        vol.Required(SERVICE_SOUND): str,
+    },
+    # cv.has_at_least_one_key(SERVICE_SOUND),
+)
+
+SERVICE_SETTINGS_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+    }
 )
 
 # Fields

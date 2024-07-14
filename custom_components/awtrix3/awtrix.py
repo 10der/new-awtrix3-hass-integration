@@ -7,7 +7,9 @@ import logging
 from PIL import Image
 import requests
 
-from .awtrix_api import AwtrixAPI
+from homeassistant.exceptions import HomeAssistantError
+
+from .const import COORDINATORS, DOMAIN
 
 """Support for AWTRIX service."""
 
@@ -33,19 +35,29 @@ def getIcon(url):
 class AwtrixService:
     """Allows to send updated to applications."""
 
-    _attr_should_poll = False
-
     def __init__(self,
                  hass,
-                 name,
-                 host,
-                 user,
-                 password
+                 name
                  ) -> None:
         """Initialize the device."""
 
+        self.hass = hass
         self.name = name
-        self.api = AwtrixAPI(hass, host, 80, user, password)
+        self._api = None
+        if name is not None:
+            self._api = self.create_api(name)
+
+    def create_api(self, name):
+        """Create API on the fly."""
+        for coordinator in self.hass.data[DOMAIN][COORDINATORS]:
+            if coordinator.data.uid == name:
+                return coordinator.client
+
+        raise HomeAssistantError("Could not send Awtrix action")
+
+    def api(self, data):
+        """Get API."""
+        return self._api if self._api else self.create_api(data.get("device"))
 
     async def push_app_data(self, data):
         """Update the application data."""
@@ -60,7 +72,7 @@ class AwtrixService:
             if str(msg["icon"]).startswith(('http://', 'https://')):
                 msg["icon"] = await self.hass.async_add_executor_job(getIcon, str(msg["icon"]))
 
-        return await self.api.device_set_item_value(url, msg)
+        return await self.api(data).device_set_item_value(url, msg)
 
     async def switch_app(self, data):
         """Call API switch app."""
@@ -69,7 +81,7 @@ class AwtrixService:
         app_id = data["name"]
 
         payload = {"name": app_id}
-        return await self.api.device_set_item_value(url, payload)
+        return await self.api(data).device_set_item_value(url, payload)
 
     async def settings(self, data):
         """Call API settings."""
@@ -79,7 +91,7 @@ class AwtrixService:
         data = data or {}
         msg = data.copy()
 
-        return await self.api.device_set_item_value(url, msg)
+        return await self.api(data).device_set_item_value(url, msg)
 
     async def rtttl(self, data):
         """Play rtttl."""
@@ -87,7 +99,7 @@ class AwtrixService:
         url = "rtttl"
         payload = data["rtttl"]
 
-        return await self.api.device_set_item_value(url, payload)
+        return await self.api(data).device_set_item_value(url, payload)
 
     async def sound(self, data):
         """Play rtttl sound."""
@@ -95,4 +107,4 @@ class AwtrixService:
         url = "sound"
         sound_id = data["sound"]
         payload = {"sound": sound_id}
-        return await self.api.device_set_item_value(url, payload)
+        return await self.api(data).device_set_item_value(url, payload)

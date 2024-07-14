@@ -9,11 +9,12 @@ import requests
 
 from homeassistant.components.notify import BaseNotificationService
 from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .awtrix_api import AwtrixAPI
+from .const import COORDINATORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,9 +28,8 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    return AwtrixNotificationService(hass=hass, host=discovery_info[CONF_HOST],
-                                     user=discovery_info[CONF_USERNAME],
-                                     password=discovery_info[CONF_PASSWORD])
+    return AwtrixNotificationService(hass=hass,
+                                     uid=discovery_info[CONF_NAME])
 
 
 ########################################################################################################
@@ -37,9 +37,19 @@ async def async_get_service(
 class AwtrixNotificationService(BaseNotificationService):
     """Implement the notification service for Awtrix."""
 
-    def __init__(self, hass, host, user, password):
+    def __init__(self, hass, uid):
         """Init the notification service for Awtrix."""
-        self.api = AwtrixAPI(hass, host, 80, user, password)
+
+        self.hass = hass
+        self.api = self.create_api(uid)
+
+    def create_api(self, name):
+        """Create API on the fly."""
+        for coordinator in self.hass.data[DOMAIN][COORDINATORS]:
+            if coordinator.data.uid == name:
+                return coordinator.client
+
+        raise HomeAssistantError("Could not send Awtrix action")
 
     async def async_send_message(self, message='', **kwargs):
         """Send a message to some Awtrix device."""

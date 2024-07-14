@@ -10,14 +10,8 @@ from aiohttp import web
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-)
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CONF_NAME, Platform
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
@@ -47,6 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, "Awtrix", "awtrix", handle_webhook
     )
 
+    #async_setup_services(hass)
     return True
 
 
@@ -60,8 +55,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    init_services(hass=hass, entry=entry)
+    # notification
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {
+                CONF_NAME:  get_device_real_name(hass, entry),
+            },
+            hass.data[DOMAIN][entry.entry_id],
+        )
+    )
 
+    init_services(hass=hass, entry=entry)
     return True
 
 
@@ -89,7 +96,6 @@ async def handle_webhook(hass, webhook_id, request):
                 coordinator.action_press(button, state)
 
     return web.Response(text="OK")
-
 
 def init_services(hass, entry):
     """"Init services."""
@@ -130,28 +136,10 @@ def init_services(hass, entry):
             )
 
     ha_device_name = get_device_real_name(hass, entry) #entry.title
-    # notification
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass,
-            Platform.NOTIFY,
-            DOMAIN,
-            {
-                CONF_NAME: ha_device_name,
-                CONF_HOST: entry.data[CONF_HOST],
-                CONF_USERNAME: entry.data[CONF_USERNAME],
-                CONF_PASSWORD: entry.data[CONF_PASSWORD],
-            },
-            hass.data[DOMAIN][entry.entry_id],
-        )
-    )
     # services
     entity = AwtrixService(
         hass,
         ha_device_name,
-        entry.data[CONF_HOST],
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
     )
     register_services(entity)
 
@@ -164,3 +152,38 @@ def get_device_real_name(hass, entry):
                 if entry_id == entry.entry_id:
                     return device.name_by_user or device.name
 
+
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Set up services for the Awtrix integration."""
+
+    async def service_handler(entry, service, call: ServiceCall) -> None:
+        """Handle service call."""
+
+        func = getattr(entry, service)
+        if func:
+            await func(call.data)
+
+    for service in SERVICES:
+        service_name = service
+
+        entry = AwtrixService(hass, None)
+        hass.services.async_register(
+            DOMAIN,
+            service_name,
+            partial(service_handler, entry, service),
+            schema=SERVICE_TO_SCHEMA[service]
+        )
+
+        # Register the service description
+        async_set_service_schema(
+            hass,
+            DOMAIN,
+            service_name,
+            {
+                "description": (
+                    f"Calls the service {service_name} of the node AWTRIX"
+                ),
+                "fields": SERVICE_TO_FIELDS[service],
+            },
+        )

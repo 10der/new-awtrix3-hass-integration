@@ -27,7 +27,7 @@ class AwtrixCoordinator(DataUpdateCoordinator[AwtrixData]):
             name=DOMAIN,
             update_interval=timedelta(seconds=1),
         )
-        self._client = AwtrixAPI(
+        self.client = AwtrixAPI(
             self.hass,
             self.config_entry.data[CONF_HOST],
             80,
@@ -38,11 +38,11 @@ class AwtrixCoordinator(DataUpdateCoordinator[AwtrixData]):
 
     async def set_value(self, key, value):
         """Set device value."""
-        await self._client.device_set_item_value(key=key, value=value)
+        await self.client.device_set_item_value(key=key, value=value)
 
     async def _async_update_data(self) -> AwtrixData:
         """Fetch the latest data from the source."""
-        return await self._client.get_data()
+        return await self.client.get_data()
 
     def on_press(self, key: str, action):
         """Set action on hardware button click."""

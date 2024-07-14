@@ -9,6 +9,7 @@ from .models import AwtrixData
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class AwtrixAPI:
     """Awtrix device API."""
 
@@ -26,8 +27,9 @@ class AwtrixAPI:
 
         try:
             auth = aiohttp.BasicAuth(self.username, self.password)
+            url = "http://" + self.host + "/api/" + key
             response = await async_get_clientsession(self.hass).post(
-                "http://" + self.host + "/api/" + key,
+                url,
                 timeout=10,
                 auth=auth,
                 json=value
@@ -66,7 +68,7 @@ class AwtrixAPI:
         except TimeoutError:
             _LOGGER.warning("Error fetching %s: timeout", self.host)
 
-        #raise CannotConnect()
+        # raise CannotConnect()
         return None
 
     async def device_config(self):
@@ -90,7 +92,7 @@ class AwtrixAPI:
         except TimeoutError:
             _LOGGER.warning("Error fetching %s: timeout", self.host)
 
-        #raise CannotConnect()
+        # raise CannotConnect()
         return None
 
     async def get_data(self) -> AwtrixData:
@@ -130,8 +132,10 @@ class AwtrixAPI:
 
         return data
 
+
 class CannotConnect(Exception):
     """Error to indicate we cannot connect."""
+
 
 class AuthenticationFailed(Exception):
     """Exception to indicate authentication failure."""
