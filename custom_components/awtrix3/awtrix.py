@@ -51,7 +51,7 @@ class AwtrixService:
         """Update the application data."""
 
         app_id = data["name"]
-        url = "custom/" + app_id
+        url = "custom?name=" + app_id
 
         data = data.get("data", {}) or {}
         msg = data.copy()

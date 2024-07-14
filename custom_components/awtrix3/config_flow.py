@@ -5,7 +5,7 @@ from pprint import pformat
 import socket
 from typing import Any
 
-import voluptuous as vol
+import voluptuous as vol  # type: ignore
 
 from homeassistant import config_entries
 from homeassistant.const import (
