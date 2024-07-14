@@ -45,33 +45,27 @@ SERVICE_PUSH_APP_DATA_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         vol.Required(SERVICE_APP_NAME): str,
         vol.Required(SERVICE_DATA, default={}): dict
     },
-    # cv.has_at_least_one_key(SERVICE_APP_NAME),
 )
 
 SERVICE_SWITCH_APP_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
         vol.Required(SERVICE_APP_NAME): str,
     },
-    # cv.has_at_least_one_key(SERVICE_APP_NAME),
 )
 
 SERVICE_RTTTL_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
         vol.Required(SERVICE_RTTTL): str,
     },
-    # cv.has_at_least_one_key(SERVICE_RTTTL),
 )
 
 SERVICE_SOUND_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
         vol.Required(SERVICE_SOUND): str,
     },
-    # cv.has_at_least_one_key(SERVICE_SOUND),
 )
 
-SERVICE_SETTINGS_SCHEMA = SERVICE_BASE_SCHEMA.extend(
-    {
-    }
+SERVICE_SETTINGS_SCHEMA = vol.Schema(
 )
 
 # Fields
