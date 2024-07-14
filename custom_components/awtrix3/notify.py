@@ -9,7 +9,7 @@ import requests
 
 from homeassistant.components.notify import BaseNotificationService
 from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
