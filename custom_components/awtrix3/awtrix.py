@@ -9,7 +9,7 @@ import requests
 
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import COORDINATORS, DOMAIN
+from .const import CONF_DEVICE_ID, COORDINATORS, DOMAIN
 
 """Support for AWTRIX service."""
 
@@ -57,7 +57,7 @@ class AwtrixService:
 
     def api(self, data):
         """Get API."""
-        return self._api if self._api else self.create_api(data.get("device"))
+        return self._api if self._api else self.create_api(data.get(CONF_DEVICE_ID))
 
     async def push_app_data(self, data):
         """Update the application data."""
@@ -67,6 +67,7 @@ class AwtrixService:
 
         data = data.get("data", {}) or {}
         msg = data.copy()
+        msg.pop(CONF_DEVICE_ID, None)
 
         if 'icon' in msg:
             if str(msg["icon"]).startswith(('http://', 'https://')):
@@ -90,6 +91,7 @@ class AwtrixService:
 
         data = data or {}
         msg = data.copy()
+        msg.pop(CONF_DEVICE_ID, None)
 
         return await self.api(data).device_set_item_value(url, msg)
 

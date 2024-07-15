@@ -31,13 +31,13 @@ SERVICES = [
 
 SERVICE_DATA = "data"
 SERVICE_APP_NAME = "name"
-CONF_DEVICE_ID = "device"
+CONF_DEVICE_ID = "device_id"
 
 # Schemas
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_ID): cv.string,
-    },
+    }
 )
 
 SERVICE_PUSH_APP_DATA_SCHEMA = SERVICE_BASE_SCHEMA.extend(
@@ -65,8 +65,13 @@ SERVICE_SOUND_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     },
 )
 
-SERVICE_SETTINGS_SCHEMA = vol.All(
+SERVICE_SETTINGS_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+    }, extra=vol.ALLOW_EXTRA,
 )
+
+# SERVICE_SETTINGS_SCHEMA = vol.All(
+# )
 
 # Fields
 SERVICE_RTTTL_FIELDS = {
