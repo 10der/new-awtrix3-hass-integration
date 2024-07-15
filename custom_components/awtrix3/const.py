@@ -65,7 +65,7 @@ SERVICE_SOUND_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     },
 )
 
-SERVICE_SETTINGS_SCHEMA = vol.Schema(
+SERVICE_SETTINGS_SCHEMA = vol.All(
 )
 
 # Fields
