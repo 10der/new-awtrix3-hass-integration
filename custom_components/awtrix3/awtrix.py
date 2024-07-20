@@ -7,8 +7,7 @@ import logging
 from PIL import Image
 import requests
 
-from homeassistant.exceptions import HomeAssistantError
-
+#from homeassistant.exceptions import HomeAssistantError
 from .const import CONF_DEVICE_ID, COORDINATORS, DOMAIN
 
 """Support for AWTRIX service."""
@@ -47,17 +46,38 @@ class AwtrixService:
         if name is not None:
             self._api = self.create_api(name)
 
+    def api(self, data):
+        """Create API on the fly."""
+        result = []
+        for device_id in data.get(CONF_DEVICE_ID):
+            api = self.create_api(device_id)
+            if api:
+                result.append(api)
+        return result
+
     def create_api(self, name):
         """Create API on the fly."""
+        if self._api:
+            return self._api
+
         for coordinator in self.hass.data[DOMAIN][COORDINATORS]:
             if coordinator.data.uid == name:
                 return coordinator.client
 
-        raise HomeAssistantError("Could not send Awtrix action")
+        _LOGGER.error("Failed to call %s: device not found", name)
+        return None
 
-    def api(self, data):
-        """Get API."""
-        return self._api if self._api else self.create_api(data.get(CONF_DEVICE_ID))
+        #raise HomeAssistantError("Could not find Awtrix device %s", name)
+
+    async def call(self, func, seq):
+        """Call action API."""
+        for i in seq:
+            try:
+                await func(i)
+            except Exception:
+                _LOGGER.error("Failed to call %s: action", i)
+
+        return True
 
     async def push_app_data(self, data):
         """Update the application data."""
@@ -65,15 +85,15 @@ class AwtrixService:
         app_id = data["name"]
         url = "custom?name=" + app_id
 
-        data = data.get("data", {}) or {}
-        msg = data.copy()
-        msg.pop(CONF_DEVICE_ID, None)
+        action_data = data.get("data", {}) or {}
+        payload = action_data.copy()
+        payload.pop(CONF_DEVICE_ID, None)
 
-        if 'icon' in msg:
-            if str(msg["icon"]).startswith(('http://', 'https://')):
-                msg["icon"] = await self.hass.async_add_executor_job(getIcon, str(msg["icon"]))
+        if 'icon' in payload:
+            if str(payload["icon"]).startswith(('http://', 'https://')):
+                payload["icon"] = await self.hass.async_add_executor_job(getIcon, str(payload["icon"]))
 
-        return await self.api(data).device_set_item_value(url, msg)
+        return await self.call(lambda x: x.device_set_item_value(url, payload), self.api(data))
 
     async def switch_app(self, data):
         """Call API switch app."""
@@ -82,7 +102,7 @@ class AwtrixService:
         app_id = data["name"]
 
         payload = {"name": app_id}
-        return await self.api(data).device_set_item_value(url, payload)
+        return await self.call(lambda x: x.device_set_item_value(url, payload), self.api(data))
 
     async def settings(self, data):
         """Call API settings."""
@@ -90,18 +110,17 @@ class AwtrixService:
         url = "settings"
 
         data = data or {}
-        msg = data.copy()
-        msg.pop(CONF_DEVICE_ID, None)
+        payload = data.copy()
+        payload.pop(CONF_DEVICE_ID, None)
 
-        return await self.api(data).device_set_item_value(url, msg)
+        return await self.call(lambda x: x.device_set_item_value(url, payload), self.api(data))
 
     async def rtttl(self, data):
         """Play rtttl."""
 
         url = "rtttl"
         payload = data["rtttl"]
-
-        return await self.api(data).device_set_item_value(url, payload)
+        return await self.call(lambda x: x.device_set_item_value(url, payload), self.api(data))
 
     async def sound(self, data):
         """Play rtttl sound."""
@@ -109,4 +128,4 @@ class AwtrixService:
         url = "sound"
         sound_id = data["sound"]
         payload = {"sound": sound_id}
-        return await self.api(data).device_set_item_value(url, payload)
+        return await self.call(lambda x: x.device_set_item_value(url, payload), self.api(data))

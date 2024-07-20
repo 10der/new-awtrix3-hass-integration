@@ -42,7 +42,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     # common serices
-    #async_setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # individual services
-    init_services(hass=hass, entry=entry)
+    #init_services(hass=hass, entry=entry)
     return True
 
 

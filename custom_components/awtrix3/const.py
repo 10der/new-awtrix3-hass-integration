@@ -36,7 +36,11 @@ CONF_DEVICE_ID = "device_id"
 # Schemas
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DEVICE_ID): cv.string,
+        #vol.Optional(CONF_DEVICE_ID): cv.string,
+        vol.Required(CONF_DEVICE_ID): vol.All(
+            cv.ensure_list
+        ),
+
     }
 )
 
