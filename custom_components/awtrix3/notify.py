@@ -46,10 +46,10 @@ class AwtrixNotificationService(BaseNotificationService):
     def create_api(self, name):
         """Create API on the fly."""
         for coordinator in self.hass.data[DOMAIN][COORDINATORS]:
-            if coordinator.data.uid == name:
+            if coordinator.device_name == name:
                 return coordinator.client
 
-        raise HomeAssistantError("Could not send Awtrix action")
+        raise HomeAssistantError("Could not initialize Awtrix notification")
 
     async def async_send_message(self, message='', **kwargs):
         """Send a message to some Awtrix device."""

@@ -50,7 +50,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Awtrix3 from a config entry."""
 
     coordinator = AwtrixCoordinator(hass=hass, entry=entry)
-    hass.data[DOMAIN][COORDINATORS].append(coordinator)
+
+    res = next((item for item in hass.data[DOMAIN][COORDINATORS] if item.config_entry.unique_id == entry.unique_id), None)
+    if not res:
+        hass.data[DOMAIN][COORDINATORS].append(coordinator)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -63,14 +66,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Platform.NOTIFY,
             DOMAIN,
             {
-                CONF_NAME:  get_device_real_name(hass, entry),
+                CONF_NAME:  coordinator.device_name,
             },
             hass.data[DOMAIN][entry.entry_id],
         )
     )
 
-    # individual services
-    #init_services(hass=hass, entry=entry)
     return True
 
 
@@ -98,62 +99,6 @@ async def handle_webhook(hass, webhook_id, request):
                 coordinator.action_press(button, state)
 
     return web.Response(text="OK")
-
-def init_services(hass, entry):
-    """"Init services."""
-    async def service_handler(entry, service, call: ServiceCall) -> None:
-        """Handle service call."""
-
-        func = getattr(entry, service)
-        if func:
-            await func(call.data)
-
-    def build_service_name(entry_name, service) -> str:
-        """Build a service name for a node."""
-        return f"{entry_name.replace('-', '_')}_{service}"
-
-    def register_services(entry):
-        """Register Services."""
-        for service in SERVICES:
-            service_name = build_service_name(entry.name, service)
-
-            hass.services.async_register(
-                DOMAIN,
-                service_name,
-                partial(service_handler, entry, service),
-                schema=SERVICE_TO_SCHEMA[service]
-            )
-
-            # Register the service description
-            async_set_service_schema(
-                hass,
-                DOMAIN,
-                service_name,
-                {
-                    "description": (
-                        f"Calls the service {service_name} of the node AWTRIX"
-                    ),
-                    "fields": SERVICE_TO_FIELDS[service],
-                },
-            )
-
-    ha_device_name = get_device_real_name(hass, entry) #entry.title
-    # services
-    entity = AwtrixService(
-        hass,
-        ha_device_name,
-    )
-    register_services(entity)
-
-def get_device_real_name(hass, entry):
-    """Get real name of device."""
-    device_registry = dr.async_get(hass)
-    for device in device_registry.devices.values():
-        if device.manufacturer == 'Blueforcer':
-            for entry_id in device.config_entries:
-                if entry_id == entry.entry_id:
-                    return device.name_by_user or device.name
-
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:

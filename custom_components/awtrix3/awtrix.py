@@ -61,7 +61,7 @@ class AwtrixService:
             return self._api
 
         for coordinator in self.hass.data[DOMAIN][COORDINATORS]:
-            if coordinator.data.uid == name:
+            if coordinator.device_name == name:
                 return coordinator.client
 
         _LOGGER.error("Failed to call %s: device not found", name)
