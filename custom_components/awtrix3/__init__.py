@@ -12,7 +12,7 @@ from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import device_registry as dr, discovery
+from homeassistant.helpers import discovery
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
 
