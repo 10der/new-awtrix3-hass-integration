@@ -1,13 +1,16 @@
 """Config flow for AWTRIX integration."""
+
 from collections.abc import Mapping
 import logging
 from pprint import pformat
 import socket
 from typing import Any
 
-import voluptuous as vol  # type: ignore
+import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_HOST,
@@ -25,20 +28,63 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_MANUAL_INPUT = "Manually configure AWTRIX3 device"
 
+
 class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for AWTRIX."""
 
     VERSION = 1
     _reauth_entry: config_entries.ConfigEntry
 
-
     def __init__(self) -> None:
         """Init discovery flow."""
         self.device_id = None
         self.devices = []
         self.awtrix_config = {}
+        self.discovered_device: tuple[dict[str, Any], str] | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery via dhcp."""
+
+        # device_info = await Twinkly(
+        #     discovery_info.ip, async_get_clientsession(self.hass)
+        # ).get_details()
+
+        await self.async_set_unique_id(self.device_id, raise_on_progress=False)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: discovery_info.ip})
+
+        self.discovered_device = (discovery_info.hostname, discovery_info.ip)
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(self, user_input=None) -> ConfigFlowResult:
+        """Confirm discovery."""
+
+        assert self.discovered_device is not None
+        device_id, host = self._discovered_device
+
+        if user_input is not None:
+            return self.async_create_entry(title=device_id,
+                                           data={
+                                               CONF_NAME: device_id,
+                                               CONF_HOST: host,
+                                           })
+
+        self._set_confirm_only()
+        placeholders = {
+            "model": "AWTRIX3",
+            "name": device_id,
+            "host": host,
+        }
+
+        return self.async_show_form(
+            step_id="discovery_confirm", description_placeholders=placeholders
+        )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user flow."""
         if user_input:
             if user_input["auto"]:
@@ -77,19 +123,21 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.devices.append(device)
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Discovered AWTRIX devices %s", pformat(self.devices))
+            _LOGGER.debug("Discovered AWTRIX devices %s",
+                          pformat(self.devices))
 
         if self.devices:
             devices = {CONF_MANUAL_INPUT: CONF_MANUAL_INPUT}
             for device in self.devices:
                 description = f"{device[CONF_NAME]} ({device[CONF_HOST]})"
-                #if hardware := device[CONF_HARDWARE]:
+                # if hardware := device[CONF_HARDWARE]:
                 #    description += f" [{hardware}]"
                 devices[device[CONF_HOST]] = description
 
             return self.async_show_form(
                 step_id="device",
-                data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(devices)}),
+                data_schema=vol.Schema(
+                    {vol.Optional(CONF_HOST): vol.In(devices)}),
             )
 
         return await self.async_step_configure()
@@ -158,9 +206,10 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                 )
 
-            return {}, {}
+            return {}, {}  # noqa: TRY300
         except AuthenticationFailed:
-            description_placeholders = {"error": "Could not authenticate with AWTRIX device."}
+            description_placeholders = {
+                "error": "Could not authenticate with AWTRIX device."}
             return {CONF_PASSWORD: "auth_failed"}, description_placeholders
         except CannotConnect:
             return {"base": "awtrix_error"}, {"error": "Cannot connect to AWTRIX device."}
@@ -183,14 +232,15 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] | None = None
         if user_input is not None:
             entry_data = entry.data
-            self.onvif_config = entry_data | user_input
+            self.awtrix_config = entry_data | user_input
             errors, description_placeholders = await self.async_setup_profiles(
                 configure_unique_id=False
             )
             if not errors:
-                return self.async_update_reload_and_abort(entry, data=self.onvif_config)
+                return self.async_update_reload_and_abort(entry, data=self.awtrix_config)
 
-        username = (user_input or {}).get(CONF_USERNAME) or entry.data[CONF_USERNAME]
+        username = (user_input or {}).get(
+            CONF_USERNAME) or entry.data[CONF_USERNAME]
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
@@ -203,12 +253,13 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
+
 async def async_discovery(hass: HomeAssistant) -> list[dict[str, Any]]:
     """Return if there are devices that can be discovered."""
     devices = []
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,
-                            socket.IPPROTO_UDP)  # UDP
+                         socket.IPPROTO_UDP)  # UDP
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     sock.settimeout(5)
@@ -226,7 +277,7 @@ async def async_discovery(hass: HomeAssistant) -> list[dict[str, Any]]:
                 CONF_HOST: addr[0],
             }
             devices.append(device)
-        except Exception:
+        except Exception:  # noqa: BLE001
             break
 
     return devices

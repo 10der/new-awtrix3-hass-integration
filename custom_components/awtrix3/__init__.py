@@ -82,14 +82,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(hass: HomeAssistant, webhook_id, request):
     """Handle incoming webhook with Awtrix requests."""
     try:
         async with asyncio.timeout(5):
             data = dict(await request.post())
     except (TimeoutError, aiohttp.web.HTTPException) as error:
         _LOGGER.error("Could not get information from POST <%s>", error)
-        return
+        return None
 
     if webhook_id == "awtrix":
         button = data["button"]

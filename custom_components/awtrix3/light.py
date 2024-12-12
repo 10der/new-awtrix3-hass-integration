@@ -23,52 +23,53 @@ async def async_setup_entry(
     """Set up AWTRIX light based on a config entry."""
     coordinator: AwtrixCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([
-            AwtrixLight(
-                hass=hass,
-                coordinator=coordinator,
-                key="matrix",
-                name="Matrix",
-                mode={ColorMode.BRIGHTNESS},
-                icon="mdi:clock-digital"
-            ),
-            AwtrixLight(
-                hass=hass,
-                coordinator=coordinator,
-                key="indicator1",
-                name="Indicator 1",
-                mode={ColorMode.RGB},
-                icon="mdi:arrow-top-right-thick"
-            ),
-            AwtrixLight(
-                hass=hass,
-                coordinator=coordinator,
-                key="indicator2",
-                name="Indicator 2",
-                mode={ColorMode.RGB},
-                icon="mdi:arrow-bottom-right-thick"
-            ),
-            AwtrixLight(
-                hass=hass,
-                coordinator=coordinator,
-                key="indicator3",
-                name="Indicator 3",
-                mode={ColorMode.RGB},
-                icon="mdi:arrow-bottom-right-thick"
-            ),
-        ]
+        AwtrixLight(
+            hass=hass,
+            coordinator=coordinator,
+            key="matrix",
+            name="Matrix",
+            mode={ColorMode.BRIGHTNESS},
+            icon="mdi:clock-digital"
+        ),
+        AwtrixLight(
+            hass=hass,
+            coordinator=coordinator,
+            key="indicator1",
+            name="Indicator 1",
+            mode={ColorMode.RGB},
+            icon="mdi:arrow-top-right-thick"
+        ),
+        AwtrixLight(
+            hass=hass,
+            coordinator=coordinator,
+            key="indicator2",
+            name="Indicator 2",
+            mode={ColorMode.RGB},
+            icon="mdi:arrow-bottom-right-thick"
+        ),
+        AwtrixLight(
+            hass=hass,
+            coordinator=coordinator,
+            key="indicator3",
+            name="Indicator 3",
+            mode={ColorMode.RGB},
+            icon="mdi:arrow-bottom-right-thick"
+        ),
+    ]
     )
+
 
 class AwtrixLight(LightEntity, AwtrixEntity):
     """Representation of a demo light."""
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         coordinator,
         key: str,
-        name:str=None,
+        name: str | None = None,
         mode=None,
-        icon: str = None
+        icon: str | None = None
     ) -> None:
         """Initialize the light."""
 
@@ -95,12 +96,14 @@ class AwtrixLight(LightEntity, AwtrixEntity):
         """Return the brightness of this light between 0..255."""
         if self.key == "bri":
             return self.coordinator.data.bri
+        return None
 
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
         if self.key == "matrix":
             return self.coordinator.data.matrix
+        return None
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the light on."""
@@ -117,11 +120,11 @@ class AwtrixLight(LightEntity, AwtrixEntity):
         if ATTR_RGB_COLOR in kwargs:
             await self.coordinator.set_value(self.key, {"color": kwargs[ATTR_RGB_COLOR]})
 
-            self._color_mode = ColorMode.RGBW
-            self._rgbw_color = kwargs[ATTR_RGB_COLOR]
+            self.color_mode = ColorMode.RGBW
+            self.rgbw_color = kwargs[ATTR_RGB_COLOR]
 
-        #await self.coordinator.push_state_update()
-        #self.async_write_ha_state()
+        # await self.coordinator.push_state_update()
+        # self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the light off."""
@@ -132,8 +135,8 @@ class AwtrixLight(LightEntity, AwtrixEntity):
 
         self._state = False
 
-        #await self.coordinator.push_state_update()
-        #self.async_write_ha_state()
+        # await self.coordinator.push_state_update()
+        # self.async_write_ha_state()
 
     @property
     def state(self):

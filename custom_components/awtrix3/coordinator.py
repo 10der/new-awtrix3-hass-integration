@@ -1,4 +1,5 @@
 """AWTRIX coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -71,6 +72,7 @@ class AwtrixCoordinator(DataUpdateCoordinator[AwtrixData]):
                 for entry_id in device.config_entries:
                     if entry_id == self.entry.entry_id:
                         return device.name_by_user or device.name
+        return None
 
 
 

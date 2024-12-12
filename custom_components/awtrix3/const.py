@@ -5,12 +5,13 @@ import voluptuous as vol
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 
-"""Constants used for Awtrix."""
+DOMAIN = "awtrix3"
 
-DOMAIN = "awtrix"
-
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.LIGHT,
-                             Platform.SWITCH, Platform.BUTTON, Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR,
+                             Platform.BUTTON,
+                             Platform.LIGHT,
+                             Platform.SENSOR,
+                             Platform.SWITCH, ]
 
 COORDINATORS = "coordinators"
 
@@ -36,7 +37,7 @@ CONF_DEVICE_ID = "device_id"
 # Schemas
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
-        #vol.Optional(CONF_DEVICE_ID): cv.string,
+        # vol.Optional(CONF_DEVICE_ID): cv.string,
         vol.Required(CONF_DEVICE_ID): vol.All(
             cv.ensure_list
         ),
@@ -86,6 +87,11 @@ SERVICE_RTTTL_FIELDS = {
         "selector": {
             "text": ""
         }
+    },
+    "device_id": {
+        "description": "device or list of devices",
+        "required": True,
+        "example": "awtrix_deadbeaf",
     }
 }
 
@@ -97,6 +103,11 @@ SERVICE_SOUND_FIELDS = {
         "selector": {
             "text": ""
         }
+    },
+    "device_id": {
+        "description": "device or list of devices",
+        "required": True,
+        "example": "awtrix_deadbeaf",
     }
 }
 
@@ -114,6 +125,11 @@ SERVICE_PUSH_APP_DATA_FIELDS = {
         "selector": {
             "object": ""
         }
+    },
+    "device_id": {
+        "description": "device or list of devices",
+        "required": True,
+        "example": "awtrix_deadbeaf",
     }
 }
 
@@ -125,10 +141,26 @@ SERVICE_SWITCH_APP_FIELDS = {
         "selector": {
             "text": ""
         }
+    },
+    "device_id": {
+        "description": "device or list of devices",
+        "required": True,
+        "example": "awtrix_deadbeaf",
     }
 }
 
 SERVICE_SETTINGS_FIELDS = {
+    "ABRI": {
+        "example": 'true',
+    },
+    "ATRANS": {
+        "example": 'true',
+    },
+    "device_id": {
+        "description": "device or list of devices",
+        "required": True,
+        "example": "awtrix_deadbeaf",
+    }
 }
 
 # services fields and schemas

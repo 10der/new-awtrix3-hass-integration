@@ -102,6 +102,7 @@ class CommmonSensor(AwtrixEntity, SensorEntity):
             if self.value_fn is not None:
                 value = self.value_fn(value)
             return self.prefix + str(value) + self.suffix
+        return None
 
 
 class DeviceTemperatureSensor(AwtrixEntity, SensorEntity):
@@ -126,6 +127,7 @@ class DeviceTemperatureSensor(AwtrixEntity, SensorEntity):
         """Return the state of the sensor."""
         if self.coordinator.data.temp is not None:
             return self.coordinator.data.temp
+        return None
 
 
 class DeviceHumiditySensor(AwtrixEntity, SensorEntity):
@@ -150,6 +152,7 @@ class DeviceHumiditySensor(AwtrixEntity, SensorEntity):
         """Return the state of the sensor."""
         if self.coordinator.data.hum is not None:
             return self.coordinator.data.hum
+        return None
 
 
 class LuxSensor(AwtrixEntity, SensorEntity):
@@ -174,6 +177,7 @@ class LuxSensor(AwtrixEntity, SensorEntity):
         """Get the current value."""
         if self.coordinator.data.lux is not None:
             return round(self.coordinator.data.lux)
+        return None
 
 
 class BatteryChargeSensor(AwtrixEntity, SensorEntity):
@@ -198,3 +202,4 @@ class BatteryChargeSensor(AwtrixEntity, SensorEntity):
         """Get the current value in percentage."""
         if self.coordinator.data.bat is not None:
             return round(self.coordinator.data.bat)
+        return None

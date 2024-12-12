@@ -3,6 +3,7 @@ import logging
 
 import aiohttp
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .models import AwtrixData
@@ -13,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 class AwtrixAPI:
     """Awtrix device API."""
 
-    def __init__(self, hass, host, port, username, password):
+    def __init__(self, hass: HomeAssistant, host, port, username, password)-> None:
         """Init Awtrix."""
 
         self.hass = hass
@@ -36,16 +37,16 @@ class AwtrixAPI:
             )
             if response.status in (401, 403):
                 _LOGGER.warning("Error %s: authentication failed", self.host)
-                raise AuthenticationFailed()
+                raise AuthenticationFailed
 
             if response.status != 200:
                 return None
 
-            return True
+            return True  # noqa: TRY300
         except TimeoutError:
             _LOGGER.warning("Error fetching %s: timeout", self.host)
 
-        raise CannotConnect()
+        raise CannotConnect
 
     async def device_info(self):
         """Get device info."""
@@ -59,7 +60,7 @@ class AwtrixAPI:
             )
             if response.status in (401, 403):
                 _LOGGER.warning("Error %s: authentication failed", self.host)
-                raise AuthenticationFailed()
+                raise AuthenticationFailed
 
             if response.status != 200:
                 return None
@@ -83,7 +84,7 @@ class AwtrixAPI:
             )
             if response.status in (401, 403):
                 _LOGGER.warning("Error %s: authentication failed", self.host)
-                raise AuthenticationFailed()
+                raise AuthenticationFailed
 
             if response.status != 200:
                 return None
@@ -92,7 +93,6 @@ class AwtrixAPI:
         except TimeoutError:
             _LOGGER.warning("Error fetching %s: timeout", self.host)
 
-        # raise CannotConnect()
         return None
 
     async def get_data(self) -> AwtrixData:

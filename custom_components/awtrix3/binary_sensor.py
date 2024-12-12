@@ -45,11 +45,11 @@ class AwtrixBinarySensor(BinarySensorEntity, AwtrixEntity):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         coordinator,
         key: str,
-        name: str = None,
-        icon: str = None
+        name: str | None = None,
+        icon: str | None = None
     ) -> None:
         """Initialize the binary sensor."""
 

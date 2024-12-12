@@ -1,41 +1,20 @@
 """Core components of AWTRIX Light."""
 
-import base64
-from io import BytesIO
 import logging
 
-from PIL import Image
-import requests
+from homeassistant.core import HomeAssistant
 
-#from homeassistant.exceptions import HomeAssistantError
+from .common import getIcon
 from .const import CONF_DEVICE_ID, COORDINATORS, DOMAIN
 
-"""Support for AWTRIX service."""
-
 _LOGGER = logging.getLogger(__name__)
-
-
-def getIcon(url):
-    """Get icon by url."""
-    try:
-        timeout = 5
-        response = requests.get(url, timeout=timeout)
-        if response and response.status_code == 200:
-            pil_im = Image.open(BytesIO(response.content))
-            pil_im = pil_im.convert('RGB')
-            b = BytesIO()
-            pil_im.save(b, 'jpeg')
-            im_bytes = b.getvalue()
-            return base64.b64encode(im_bytes).decode()
-    except Exception:
-        pass
 
 
 class AwtrixService:
     """Allows to send updated to applications."""
 
     def __init__(self,
-                 hass,
+                 hass: HomeAssistant,
                  name
                  ) -> None:
         """Initialize the device."""
@@ -67,14 +46,14 @@ class AwtrixService:
         _LOGGER.error("Failed to call %s: device not found", name)
         return None
 
-        #raise HomeAssistantError("Could not find Awtrix device %s", name)
+        # raise HomeAssistantError("Could not find Awtrix device %s", name)
 
     async def call(self, func, seq):
         """Call action API."""
         for i in seq:
             try:
                 await func(i)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.error("Failed to call %s: action", i)
 
         return True

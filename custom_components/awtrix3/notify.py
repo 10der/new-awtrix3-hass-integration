@@ -1,22 +1,18 @@
 """Support for Awtrix notifications."""
 
-import base64
-from io import BytesIO
 import logging
 
-from PIL import Image
-import requests
-
-from homeassistant.components.notify import BaseNotificationService
-from homeassistant.components.notify.const import ATTR_DATA
+from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .common import getIcon
 from .const import COORDINATORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_get_service(
     hass: HomeAssistant,
@@ -37,7 +33,7 @@ async def async_get_service(
 class AwtrixNotificationService(BaseNotificationService):
     """Implement the notification service for Awtrix."""
 
-    def __init__(self, hass, uid):
+    def __init__(self, hass: HomeAssistant, uid) -> None:
         """Init the notification service for Awtrix."""
 
         self.hass = hass
@@ -72,18 +68,3 @@ class AwtrixNotificationService(BaseNotificationService):
 
         command = "notify/dismiss" if not message else "notify"
         return await self.api.device_set_item_value(command, msg)
-
-def getIcon(url):
-    """Get icon by url."""
-    try:
-        timeout=5
-        response = requests.get(url, timeout=timeout)
-        if response and response.status_code == 200:
-            pil_im = Image.open(BytesIO(response.content))
-            pil_im = pil_im.convert('RGB')
-            b = BytesIO()
-            pil_im.save(b, 'jpeg')
-            im_bytes = b.getvalue()
-            return base64.b64encode(im_bytes).decode()
-    except Exception as err:
-        _LOGGER.exception(err)

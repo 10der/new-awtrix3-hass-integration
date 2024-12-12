@@ -1,4 +1,5 @@
 """Entity object for shared properties of Awtrix entities."""
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

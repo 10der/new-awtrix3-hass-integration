@@ -1,61 +1,61 @@
 {
-  "config": {
-    "abort": {
-      "already_configured": "Device is already configured",
-      "already_in_progress": "Configuration flow is already in progress",
-      "no_devices_found": "No devices found on the network",
-      "no_mac": "Could not configure unique ID for AWTRIX device.",
-      "no_device_info": "Could not get device informatiom.",
-      "reauth_successful": "Re-authentication was successful"
-    },
-    "error": {
-      "auth_failed": "Could not authenticate: {error}",
-      "cannot_connect": "Failed to connect",
-      "no_awtrix_service": "No AWTRIX service found. Check that the port number is correct.",
-      "awtrix_error": "Error setting up AWTRIX device: {error}. Check logs for more information."
-    },
-    "step": {
-      "configure": {
-        "data": {
-          "host": "Host",
-          "name": "Name",
-          "password": "Password",
-          "port": "Port",
-          "username": "Username"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "no_device_info": "Could not get device informatiom.",
+            "no_devices_found": "No devices found on the network",
+            "no_mac": "Could not configure unique ID for AWTRIX device.",
+            "reauth_successful": "Re-authentication was successful"
         },
-        "data_description": {
-          "host": "The hostname or IP address of your AWTRIX device."
+        "error": {
+            "auth_failed": "Could not authenticate: {error}",
+            "awtrix_error": "Error setting up AWTRIX device: {error}. Check logs for more information.",
+            "cannot_connect": "Failed to connect",
+            "no_awtrix_service": "No AWTRIX service found. Check that the port number is correct."
         },
-        "title": "Configure AWTRIX device"
-      },
-      "configure_profile": {
-        "data": {
-          "include": "Create device entity"
-        },
-        "description": "Create device entity for {profile} at {resolution} resolution?",
-        "title": "Configure Profiles"
-      },
-      "device": {
-        "data": {
-          "host": "Select discovered AWTRIX device"
-        },
-        "title": "Select AWTRIX device"
-      },
-      "reauth_confirm": {
-        "data": {
-          "password": "Password",
-          "username": "Username"
-        },
-        "description": "Some devices will reject authentication if the time is out of sync by more than 5 seconds. If authentication is unsuccessful, verify the time on the device is correct and try again.",
-        "title": "Reauthenticate the AWTRIX device"
-      },
-      "user": {
-        "data": {
-          "auto": "Search automatically"
-        },
-        "description": "By clicking submit, we will search your network for AWTRIX devices.",
-        "title": "AWTRIX device setup"
-      }
+        "step": {
+            "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your AWTRIX device."
+                },
+                "title": "Configure AWTRIX device"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Create device entity"
+                },
+                "description": "Create device entity for {profile} at {resolution} resolution?",
+                "title": "Configure Profiles"
+            },
+            "device": {
+                "data": {
+                    "host": "Select discovered AWTRIX device"
+                },
+                "title": "Select AWTRIX device"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Some devices will reject authentication if the time is out of sync by more than 5 seconds. If authentication is unsuccessful, verify the time on the device is correct and try again.",
+                "title": "Reauthenticate the AWTRIX device"
+            },
+            "user": {
+                "data": {
+                    "auto": "Search automatically"
+                },
+                "description": "By clicking submit, we will search your network for AWTTRIX devices.",
+                "title": "AWTRIX device setup"
+            }
+        }
     }
-  }
 }

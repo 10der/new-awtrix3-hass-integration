@@ -49,16 +49,17 @@ async def async_setup_entry(
         ]
     )
 
+
 class AwtrixButton(ButtonEntity, AwtrixEntity):
     """Representation of awtrix button entity."""
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         coordinator,
         key: str,
-        name: str = None,
-        icon: str = None
+        name: str | None = None,
+        icon: str | None = None
     ) -> None:
         """Initialize the Awtrix button entity."""
         self.hass = hass
