@@ -1,10 +1,16 @@
 """Platform for light integration."""
 
+from typing import Any
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_FLASH,
     ATTR_RGB_COLOR,
+    FLASH_LONG,
+    FLASH_SHORT,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -81,6 +87,7 @@ class AwtrixLight(LightEntity, AwtrixEntity):
         self._available = True
         self._attr_icon = icon
         self._attr_supported_color_modes = mode
+        self._attr_supported_features = LightEntityFeature.FLASH
 
         super().__init__(coordinator, key)
 
@@ -105,28 +112,38 @@ class AwtrixLight(LightEntity, AwtrixEntity):
             return self.coordinator.data.matrix
         return None
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if self.key == "matrix":
             await self.coordinator.set_value("power", {"power": True})
-        elif ATTR_RGB_COLOR not in kwargs:
-            await self.coordinator.set_value(self.key, {"color": "#ffffff"})
+        else:
+            data = {"color": "#ffffff"}
+            if ATTR_BRIGHTNESS in kwargs:
+                self._brightness = kwargs[ATTR_BRIGHTNESS]
 
-        self._state = True
+            if ATTR_RGB_COLOR in kwargs:
+                data["color"] = kwargs[ATTR_RGB_COLOR]
 
-        if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            # Flash.
+            if ATTR_FLASH in kwargs and self.supported_features & LightEntityFeature.FLASH:
+                if kwargs[ATTR_FLASH] == FLASH_LONG:
+                    data["blink"] = 30
+                elif kwargs[ATTR_FLASH] == FLASH_SHORT:
+                    data["blink"] = 10
+                else:
+                    pass
 
-        if ATTR_RGB_COLOR in kwargs:
-            await self.coordinator.set_value(self.key, {"color": kwargs[ATTR_RGB_COLOR]})
+            await self.coordinator.set_value(self.key, data)
 
             self.color_mode = ColorMode.RGBW
-            self.rgbw_color = kwargs[ATTR_RGB_COLOR]
+            self.rgbw_color = data["color"]
+
+        self._state = True
 
         # await self.coordinator.push_state_update()
         # self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if self.key == "matrix":
             await self.coordinator.set_value("power", {"power": False})
@@ -139,7 +156,7 @@ class AwtrixLight(LightEntity, AwtrixEntity):
         # self.async_write_ha_state()
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         value = getattr(self.coordinator.data, self.key, None)
         return "on" if value else "off"
