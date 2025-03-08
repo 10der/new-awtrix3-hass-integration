@@ -87,6 +87,7 @@ class AwtrixLight(LightEntity, AwtrixEntity):
         self._available = True
         self._attr_icon = icon
         self._attr_supported_color_modes = mode
+        self.mode = mode
         self._attr_supported_features = LightEntityFeature.FLASH
 
         super().__init__(coordinator, key)
@@ -116,6 +117,9 @@ class AwtrixLight(LightEntity, AwtrixEntity):
         """Turn the light on."""
         if self.key == "matrix":
             await self.coordinator.set_value("power", {"power": True})
+            if ATTR_BRIGHTNESS in kwargs:
+                self._brightness = kwargs[ATTR_BRIGHTNESS]
+                await self.coordinator.set_value("settings", {"BRI": self._brightness})
         else:
             data = {"color": "#ffffff"}
             if ATTR_BRIGHTNESS in kwargs:
@@ -160,3 +164,13 @@ class AwtrixLight(LightEntity, AwtrixEntity):
         """Return the state of the sensor."""
         value = getattr(self.coordinator.data, self.key, None)
         return "on" if value else "off"
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Flag supported color modes."""
+        return {self.color_mode}
+
+    @property
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        return list(self.mode)[0]
