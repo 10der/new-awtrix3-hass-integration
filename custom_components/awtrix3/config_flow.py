@@ -9,7 +9,9 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
+
+# from homeassistant.components import dhcp
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -40,47 +42,38 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.device_id = None
         self.devices = []
         self.awtrix_config = {}
-        self.discovered_device: tuple[dict[str, Any], str] | None = None
+        self._discovered_device: tuple[dict[str, Any], str] | None = None
 
-    async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
-        """Handle discovery via dhcp."""
+        """Handle a discovered Lan coordinator."""
 
-        # device_info = await Twinkly(
-        #     discovery_info.ip, async_get_clientsession(self.hass)
-        # ).get_details()
-
-        await self.async_set_unique_id(self.device_id, raise_on_progress=False)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info.ip})
-
-        self.discovered_device = (discovery_info.hostname, discovery_info.ip)
-        return await self.async_step_discovery_confirm()
-
-    async def async_step_discovery_confirm(self, user_input=None) -> ConfigFlowResult:
-        """Confirm discovery."""
-
-        assert self.discovered_device is not None
-        device_id, host = self._discovered_device
-
-        if user_input is not None:
-            return self.async_create_entry(title=device_id,
-                                           data={
-                                               CONF_NAME: device_id,
-                                               CONF_HOST: host,
-                                           })
-
-        self._set_confirm_only()
-        placeholders = {
-            "model": "AWTRIX3",
-            "name": device_id,
-            "host": host,
+        self._discovered_device = {
+            CONF_DEVICE_ID: discovery_info.properties.get("id"),
+            CONF_NAME: discovery_info.properties.get("name"),
+            CONF_HOST: discovery_info.host
         }
 
-        return self.async_show_form(
-            step_id="discovery_confirm", description_placeholders=placeholders
-        )
+        await self.async_set_unique_id(self._discovered_device["device_id"])
+        self._abort_if_unique_id_configured()
+
+        self.context["title_placeholders"] = self._discovered_device
+
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(self, user_input=None) -> ConfigFlowResult:
+        """Confirm discovery."""
+
+        device = self._discovered_device
+
+        self.device_id = device[CONF_DEVICE_ID]
+        self.awtrix_config = {
+            CONF_NAME: device[CONF_NAME],
+            CONF_HOST: device[CONF_HOST],
+        }
+
+        return await self.async_step_configure()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

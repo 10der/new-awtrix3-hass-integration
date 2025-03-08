@@ -4,14 +4,16 @@
   "config_flow": true,
   "codeowners": ["@10der"],
   "integration_type": "device",
-  "dependencies": [],
-  "dhcp": [
+  "dependencies": ["zeroconf"],
+  "zeroconf": [
+    "_awtrix._tcp.local.",
     {
-      "hostname": "awtrix_*"
+      "type": "_http._tcp.local.",
+      "name": "awtrix"
     }
   ],
   "documentation": "https://github.com/10der/homeassistant-custom_components-awtrix/blob/main/README.md",
   "iot_class": "local_polling",
   "requirements": [],
-  "version": "0.1.8"
+  "version": "0.1.10"
 }

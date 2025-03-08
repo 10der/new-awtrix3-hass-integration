@@ -127,9 +127,9 @@ class AwtrixLight(LightEntity, AwtrixEntity):
             # Flash.
             if ATTR_FLASH in kwargs and self.supported_features & LightEntityFeature.FLASH:
                 if kwargs[ATTR_FLASH] == FLASH_LONG:
-                    data["blink"] = 30
+                    data["blink"] = 1000
                 elif kwargs[ATTR_FLASH] == FLASH_SHORT:
-                    data["blink"] = 10
+                    data["blink"] = 500
                 else:
                     pass
 
