@@ -145,18 +145,19 @@ action:
      sequence:
        - variables:
             awtrix_device_name: "{{ iif( device_attr(repeat.item, 'name_by_user') != none, device_attr(repeat.item, 'name_by_user'), device_attr(repeat.item, 'name') ) }}"
+            awtrix_device_id: "{{repeat.item}}"
 
        - if: !input additional_conditions
          then:
            - service: awtrix3.push_app_data
              data:
-               device_id: "{{awtrix_device_name}}"
+               device_id: "{{awtrix_device_id}}"
                name: "{{app_name}}"
                data: "{{ dict(payload, **user_options) }}"
 
          else:
            - service: awtrix3.push_app_data
              data:
-               device_id: "{{awtrix_device_name}}"
+               device_id: "{{awtrix_device_id}}"
                name: "{{app_name}}"
                data: {}

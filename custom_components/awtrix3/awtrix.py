@@ -4,8 +4,8 @@ import logging
 
 from homeassistant.core import HomeAssistant
 
-from .common import getIcon
-from .const import CONF_DEVICE_ID, COORDINATORS, DOMAIN
+from .common import async_get_coordinator_by_device_id, getIcon
+from .const import CONF_DEVICE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,39 +14,19 @@ class AwtrixService:
     """Allows to send updated to applications."""
 
     def __init__(self,
-                 hass: HomeAssistant,
-                 name
+                 hass: HomeAssistant
                  ) -> None:
         """Initialize the device."""
 
         self.hass = hass
-        self.name = name
-        self._api = None
-        if name is not None:
-            self._api = self.create_api(name)
 
     def api(self, data):
         """Create API on the fly."""
         result = []
         for device_id in data.get(CONF_DEVICE_ID):
-            api = self.create_api(device_id)
-            if api:
-                result.append(api)
+            coordinator = async_get_coordinator_by_device_id(self.hass, device_id)
+            result.append(coordinator.api)
         return result
-
-    def create_api(self, name):
-        """Create API on the fly."""
-        if self._api:
-            return self._api
-
-        for coordinator in self.hass.data[DOMAIN][COORDINATORS]:
-            if coordinator.device_name == name:
-                return coordinator.client
-
-        _LOGGER.error("Failed to call %s: device not found", name)
-        return None
-
-        # raise HomeAssistantError("Could not find Awtrix device %s", name)
 
     async def call(self, func, seq):
         """Call action API."""

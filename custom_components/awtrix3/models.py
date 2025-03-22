@@ -32,3 +32,7 @@ class AwtrixData(DeviceStat):
     button_left: bool
     button_select: bool
     button_right: bool
+
+    def __getitem__(self, item):
+        """Get item."""
+        return self.__dict__[item]

@@ -20,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
 
-    coordinator: AwtrixCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: AwtrixCoordinator = entry.runtime_data.coordinator
     async_add_entities([
         AwtrixSwitch(
             hass=hass,
@@ -65,12 +65,16 @@ class AwtrixSwitch(SwitchEntity, AwtrixEntity):
         if self.key == "abri":
             await self.coordinator.set_value("settings", {"ABRI": True})
 
+        await self.coordinator.async_refresh()
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self.key == "atrans":
             await self.coordinator.set_value("settings", {"ATRANS": False})
         if self.key == "abri":
             await self.coordinator.set_value("settings", {"ABRI": False})
+
+        await self.coordinator.async_refresh()
 
     @property
     def state(self) -> str:

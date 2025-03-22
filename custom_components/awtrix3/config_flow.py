@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
-from .awtrix_api import AuthenticationFailed, AwtrixAPI, CannotConnect
+from .awtrix_api import ApiAuthenticationFailed, AwtrixAPI, ApiCannotConnect
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -181,7 +181,7 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            info = await api.device_info()
+            info = await api.get_data()
             if info is None:
                 raise AbortFlow(reason="no_device_info")
 
@@ -200,11 +200,11 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             return {}, {}  # noqa: TRY300
-        except AuthenticationFailed:
+        except ApiAuthenticationFailed:
             description_placeholders = {
                 "error": "Could not authenticate with AWTRIX device."}
             return {CONF_PASSWORD: "auth_failed"}, description_placeholders
-        except CannotConnect:
+        except ApiCannotConnect:
             return {"base": "awtrix_error"}, {"error": "Cannot connect to AWTRIX device."}
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:

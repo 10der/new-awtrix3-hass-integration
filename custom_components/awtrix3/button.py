@@ -16,9 +16,9 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the demo button platform."""
+    """Set up the Awtrix button platform."""
 
-    coordinator: AwtrixCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: AwtrixCoordinator = entry.runtime_data.coordinator
 
     async_add_entities(
         [

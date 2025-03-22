@@ -37,7 +37,7 @@ class AwtrixAPI:
             )
             if response.status in (401, 403):
                 _LOGGER.warning("Error %s: authentication failed", self.host)
-                raise AuthenticationFailed
+                raise ApiAuthenticationFailed
 
             if response.status != 200:
                 return None
@@ -46,62 +46,16 @@ class AwtrixAPI:
         except TimeoutError:
             _LOGGER.warning("Error fetching %s: timeout", self.host)
 
-        raise CannotConnect
-
-    async def device_info(self):
-        """Get device info."""
-
-        try:
-            auth = aiohttp.BasicAuth(self.username, self.password)
-            response = await async_get_clientsession(self.hass).get(
-                "http://" + self.host + "/api/" + "stats",
-                timeout=10,
-                auth=auth
-            )
-            if response.status in (401, 403):
-                _LOGGER.warning("Error %s: authentication failed", self.host)
-                raise AuthenticationFailed
-
-            if response.status != 200:
-                return None
-
-            return await response.json()
-        except TimeoutError:
-            _LOGGER.warning("Error fetching %s: timeout", self.host)
-
-        # raise CannotConnect()
-        return None
-
-    async def device_config(self):
-        """Get device config."""
-
-        try:
-            auth = aiohttp.BasicAuth(self.username, self.password)
-            response = await async_get_clientsession(self.hass).get(
-                "http://" + self.host + "/api/" + "settings",
-                timeout=10,
-                auth=auth
-            )
-            if response.status in (401, 403):
-                _LOGGER.warning("Error %s: authentication failed", self.host)
-                raise AuthenticationFailed
-
-            if response.status != 200:
-                return None
-
-            return await response.json()
-        except TimeoutError:
-            _LOGGER.warning("Error fetching %s: timeout", self.host)
-
-        return None
+        raise ApiCannotConnect
 
     async def get_data(self) -> AwtrixData:
         """Get all actual data from device."""
-        stats = await self.device_info()
+        # raise ApiCannotConnect
+        stats = await self.__device_info()
         if stats is None:
             stats = {}
 
-        config = await self.device_config()
+        config = await self.__device_config()
         if config is None:
             config = {}
 
@@ -132,10 +86,55 @@ class AwtrixAPI:
 
         return data
 
+    async def __device_info(self):
+        """Get device info."""
 
-class CannotConnect(Exception):
+        try:
+            auth = aiohttp.BasicAuth(self.username, self.password)
+            response = await async_get_clientsession(self.hass).get(
+                "http://" + self.host + "/api/" + "stats",
+                timeout=10,
+                auth=auth
+            )
+            if response.status in (401, 403):
+                _LOGGER.warning("Error %s: authentication failed", self.host)
+                raise ApiAuthenticationFailed
+
+            if response.status != 200:
+                return None
+
+            return await response.json()
+        except TimeoutError:
+            _LOGGER.warning("Error fetching %s: timeout", self.host)
+
+        # raise CannotConnect()
+        return None
+
+    async def __device_config(self):
+        """Get device config."""
+
+        try:
+            auth = aiohttp.BasicAuth(self.username, self.password)
+            response = await async_get_clientsession(self.hass).get(
+                "http://" + self.host + "/api/" + "settings",
+                timeout=10,
+                auth=auth
+            )
+            if response.status in (401, 403):
+                _LOGGER.warning("Error %s: authentication failed", self.host)
+                raise ApiAuthenticationFailed
+
+            if response.status != 200:
+                return None
+
+            return await response.json()
+        except TimeoutError:
+            _LOGGER.warning("Error fetching %s: timeout", self.host)
+
+        return None
+
+class ApiCannotConnect(Exception):
     """Error to indicate we cannot connect."""
 
-
-class AuthenticationFailed(Exception):
+class ApiAuthenticationFailed(Exception):
     """Exception to indicate authentication failure."""

@@ -2,17 +2,22 @@
 
 import logging
 
-from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
-from homeassistant.const import CONF_NAME
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TARGET,
+    BaseNotificationService,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .common import getIcon
-from .const import COORDINATORS, DOMAIN
+from .common import (
+    async_get_coordinator_by_device_name,
+    async_get_coordinator_devices,
+    getIcon,
+)
+from .coordinator import AwtrixCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
 
 async def async_get_service(
     hass: HomeAssistant,
@@ -25,7 +30,7 @@ async def async_get_service(
         return None
 
     return AwtrixNotificationService(hass=hass,
-                                     uid=discovery_info[CONF_NAME])
+                                     coordinator=discovery_info.get("coordinator", None))
 
 
 ########################################################################################################
@@ -33,27 +38,34 @@ async def async_get_service(
 class AwtrixNotificationService(BaseNotificationService):
     """Implement the notification service for Awtrix."""
 
-    def __init__(self, hass: HomeAssistant, uid) -> None:
+    def __init__(self, hass: HomeAssistant, coordinator: AwtrixCoordinator) -> None:
         """Init the notification service for Awtrix."""
 
         self.hass = hass
-        self.api = self.create_api(uid)
-
-    def create_api(self, name):
-        """Create API on the fly."""
-        for coordinator in self.hass.data[DOMAIN][COORDINATORS]:
-            if coordinator.device_name == name:
-                return coordinator.client
-
-        raise HomeAssistantError("Could not initialize Awtrix notification")
+        self.coordinator = coordinator
 
     async def async_send_message(self, message='', **kwargs):
         """Send a message to some Awtrix device."""
 
-        data = kwargs.get(ATTR_DATA)
-        return await self.notification(message, data)
+        apis = []
+        if self.coordinator is None:
+            target_ids = kwargs.get(ATTR_TARGET, 'all')
+            if target_ids == 'all':
+                coordinators = async_get_coordinator_devices(self.hass)
+                apis = [x.api for x in coordinators]
+            else:
+                coordinators = async_get_coordinator_by_device_name(self.hass, target_ids)
+                apis = [x.api for x in coordinators]
+        else:
+            apis.append(self.coordinator.api)
 
-    async def notification(self, message, data):
+        data = kwargs.get(ATTR_DATA)
+        for api in apis:
+            await self.notification(api, message, data)
+
+        return True
+
+    async def notification(self, api, message, data):
         """Handle the notification service for Awtrix."""
 
         data = data or {}
@@ -67,4 +79,4 @@ class AwtrixNotificationService(BaseNotificationService):
                     msg["icon"] = icon
 
         command = "notify/dismiss" if not message else "notify"
-        return await self.api.device_set_item_value(command, msg)
+        return await api.device_set_item_value(command, msg)

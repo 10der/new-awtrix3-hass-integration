@@ -28,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
 
-    coordinator: AwtrixCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: AwtrixCoordinator = entry.runtime_data.coordinator
     async_add_entities(
         [
             DeviceTemperatureSensor(hass=hass, coordinator=coordinator),
@@ -181,7 +181,7 @@ class LuxSensor(AwtrixEntity, SensorEntity):
 
 
 class BatteryChargeSensor(AwtrixEntity, SensorEntity):
-    """Representation of an Awtric charge sensor."""
+    """Representation of an Awtrix charge sensor."""
 
     _attr_name = "Battery"
     _attr_state_class = SensorStateClass.MEASUREMENT

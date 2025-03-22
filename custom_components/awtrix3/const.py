@@ -7,6 +7,9 @@ from homeassistant.helpers import config_validation as cv
 
 DOMAIN = "awtrix3"
 
+DEFAULT_SCAN_INTERVAL = 10
+MIN_SCAN_INTERVAL = 1
+
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR,
                              Platform.BUTTON,
                              Platform.LIGHT,
@@ -75,9 +78,6 @@ SERVICE_SETTINGS_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     }, extra=vol.ALLOW_EXTRA,
 )
 
-# SERVICE_SETTINGS_SCHEMA = vol.All(
-# )
-
 # Fields
 SERVICE_RTTTL_FIELDS = {
     "rtttl": {
@@ -91,7 +91,13 @@ SERVICE_RTTTL_FIELDS = {
     "device_id": {
         "description": "device or list of devices",
         "required": True,
-        "example": "awtrix_deadbeaf",
+        "example": "deadbeaf",
+        "selector": {
+            "device": {
+                "integration": "awtrix3",
+                "multiple" : True,
+            }
+        }
     }
 }
 
@@ -107,7 +113,13 @@ SERVICE_SOUND_FIELDS = {
     "device_id": {
         "description": "device or list of devices",
         "required": True,
-        "example": "awtrix_deadbeaf",
+        "example": "deadbeaf",
+        "selector": {
+            "device": {
+                "integration": "awtrix3",
+                "multiple" : True,
+            }
+        }
     }
 }
 
@@ -129,7 +141,13 @@ SERVICE_PUSH_APP_DATA_FIELDS = {
     "device_id": {
         "description": "device or list of devices",
         "required": True,
-        "example": "awtrix_deadbeaf",
+        "example": "deadbeaf",
+        "selector": {
+            "device": {
+                "integration": "awtrix3",
+                "multiple" : True,
+            }
+        }
     }
 }
 
@@ -145,7 +163,13 @@ SERVICE_SWITCH_APP_FIELDS = {
     "device_id": {
         "description": "device or list of devices",
         "required": True,
-        "example": "awtrix_deadbeaf",
+        "example": "deadbeaf",
+        "selector": {
+            "device": {
+                "integration": "awtrix3",
+                "multiple" : True,
+            }
+        }
     }
 }
 
@@ -159,7 +183,13 @@ SERVICE_SETTINGS_FIELDS = {
     "device_id": {
         "description": "device or list of devices",
         "required": True,
-        "example": "awtrix_deadbeaf",
+        "example": "deadbeaf",
+        "selector": {
+            "device": {
+                "integration": "awtrix3",
+                "multiple" : True,
+            }
+        }
     }
 }
 

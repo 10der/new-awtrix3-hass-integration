@@ -2,62 +2,45 @@
 from __future__ import annotations
 
 import asyncio
-from functools import partial
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
 import aiohttp
 from aiohttp import web
 
 from homeassistant.components import webhook
+from homeassistant.components.notify import ConfigType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
-from homeassistant.helpers.service import async_set_service_schema
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .awtrix import AwtrixService
-from .const import (
-    COORDINATORS,
-    DOMAIN,
-    PLATFORMS,
-    SERVICE_TO_FIELDS,
-    SERVICE_TO_SCHEMA,
-    SERVICES,
-)
+from .common import async_get_coordinator_by_device_name
+from .const import DOMAIN, PLATFORMS
 from .coordinator import AwtrixCoordinator
+from .services import AwtrixServicesSetup
 
 _LOGGER = logging.getLogger(__name__)
+
+type MyConfigEntry = ConfigEntry[RuntimeData]
+
+
+@dataclass
+class RuntimeData:
+    """Class to hold your data."""
+
+    coordinator: DataUpdateCoordinator
+    cancel_update_listener: Callable
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Awtrix component."""
 
-    hass.data.setdefault(DOMAIN, {})
-
-    hass.data[DOMAIN].setdefault(COORDINATORS, [])
-
-    webhook.async_register(
-        hass, DOMAIN, "Awtrix", "awtrix", handle_webhook
-    )
-
-    # common serices
-    async_setup_services(hass)
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Awtrix3 from a config entry."""
-
-    coordinator = AwtrixCoordinator(hass=hass, entry=entry)
-
-    res = next((item for item in hass.data[DOMAIN][COORDINATORS] if item.config_entry.unique_id == entry.unique_id), None)
-    if not res:
-        hass.data[DOMAIN][COORDINATORS].append(coordinator)
-    await coordinator.async_config_entry_first_refresh()
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    AwtrixServicesSetup(hass, config)
 
     # notification
     hass.async_create_task(
@@ -66,71 +49,92 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Platform.NOTIFY,
             DOMAIN,
             {
-                CONF_NAME:  coordinator.device_name,
+                CONF_NAME:  "awtrix",
             },
-            hass.data[DOMAIN][entry.entry_id],
+            config
         )
     )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -> bool:
+    """Set up Awtrix Integration from a config entry."""
+
+    coordinator = AwtrixCoordinator(hass, config_entry)
+    await coordinator.async_config_entry_first_refresh()
+
+    if not coordinator.data:
+        raise ConfigEntryNotReady
+
+    cancel_update_listener = config_entry.async_on_unload(
+        config_entry.add_update_listener(_async_update_listener)
+    )
+
+    config_entry.runtime_data = RuntimeData(
+        coordinator, cancel_update_listener)
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    async def handle_webhook(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> web.Response:
+        """Handle webhook callback."""
+        try:
+            async with asyncio.timeout(5):
+                data = dict(await request.post())
+        except (TimeoutError, aiohttp.web.HTTPException) as error:
+            _LOGGER.error("Could not get information from POST <%s>", error)
+            return None
+        device_name = webhook_id
+        coordinators =  async_get_coordinator_by_device_name(hass, [device_name])
+        coordinator = next(iter(coordinators), None)
+        if coordinator is not None:
+            button = data["button"]
+            state = data["state"]
+            coordinator.action_press(button, state)
+        return web.Response(text="OK")
+
+    webhook.async_register(
+        hass, DOMAIN, "Awtrix", config_entry.unique_id, handle_webhook
+    )
+
+    # # notification
+    # hass.async_create_task(
+    #     discovery.async_load_platform(
+    #         hass,
+    #         Platform.NOTIFY,
+    #         DOMAIN,
+    #         {
+    #             CONF_NAME:  config_entry.unique_id,
+    #             "coordinator": coordinator,
+    #         },
+    #         {},
+    #     )
+    # )
+
+    # Return true to denote a successful setup.
+    return True
+
+
+async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Handle config options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Delete device if selected from UI."""
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
 
+    # Unload services
+    for service in hass.services.async_services_for_domain(DOMAIN):
+        hass.services.async_remove(DOMAIN, service)
 
-async def handle_webhook(hass: HomeAssistant, webhook_id, request):
-    """Handle incoming webhook with Awtrix requests."""
-    try:
-        async with asyncio.timeout(5):
-            data = dict(await request.post())
-    except (TimeoutError, aiohttp.web.HTTPException) as error:
-        _LOGGER.error("Could not get information from POST <%s>", error)
-        return None
-
-    if webhook_id == "awtrix":
-        button = data["button"]
-        state = data["state"]
-        for coordinator in hass.data[DOMAIN][COORDINATORS]:
-            if coordinator.data.uid == request.query_string:
-                coordinator.action_press(button, state)
-
-    return web.Response(text="OK")
-
-@callback
-def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up services for the Awtrix integration."""
-
-    async def service_handler(entry, service, call: ServiceCall) -> None:
-        """Handle service call."""
-
-        func = getattr(entry, service)
-        if func:
-            await func(call.data)
-
-    for service in SERVICES:
-        service_name = service
-
-        entry = AwtrixService(hass, None)
-        hass.services.async_register(
-            DOMAIN,
-            service_name,
-            partial(service_handler, entry, service),
-            schema=SERVICE_TO_SCHEMA[service]
-        )
-
-        # Register the service description
-        async_set_service_schema(
-            hass,
-            DOMAIN,
-            service_name,
-            {
-                "description": (
-                    f"Calls the service {service_name} of the node AWTRIX"
-                ),
-                "fields": SERVICE_TO_FIELDS[service],
-            },
-        )
+    # Unload platforms and return result
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
