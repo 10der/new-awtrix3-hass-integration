@@ -42,7 +42,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     AwtrixServicesSetup(hass, config)
 
-    # notification
+    # notifications
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
@@ -76,42 +76,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    async def handle_webhook(
-        hass: HomeAssistant, webhook_id: str, request: web.Request
-    ) -> web.Response:
-        """Handle webhook callback."""
-        try:
-            async with asyncio.timeout(5):
-                data = dict(await request.post())
-        except (TimeoutError, aiohttp.web.HTTPException) as error:
-            _LOGGER.error("Could not get information from POST <%s>", error)
-            return None
-        device_name = webhook_id
-        coordinators =  async_get_coordinator_by_device_name(hass, [device_name])
-        coordinator = next(iter(coordinators), None)
-        if coordinator is not None:
-            button = data["button"]
-            state = data["state"]
-            coordinator.action_press(button, state)
-        return web.Response(text="OK")
+    await register_webhook_v1(hass, config_entry)
 
-    webhook.async_register(
-        hass, DOMAIN, "Awtrix", config_entry.unique_id, handle_webhook
+    # notification (deprecated])
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {
+                CONF_NAME:  config_entry.unique_id,
+                "coordinator": coordinator,
+            },
+            {},
+        )
     )
-
-    # # notification
-    # hass.async_create_task(
-    #     discovery.async_load_platform(
-    #         hass,
-    #         Platform.NOTIFY,
-    #         DOMAIN,
-    #         {
-    #             CONF_NAME:  config_entry.unique_id,
-    #             "coordinator": coordinator,
-    #         },
-    #         {},
-    #     )
-    # )
 
     # Return true to denote a successful setup.
     return True
@@ -138,3 +117,73 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -
 
     # Unload platforms and return result
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+async def register_webhook_v1(hass: HomeAssistant, config_entry):
+    """Register webhook V1."""
+
+    async def handle_webhook(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> web.Response:
+        """Handle webhook callback.
+
+        dev.json
+        button_callback: http callback url for button presses.
+        Sample http://hass.local:8123/api/webhook/awtrix_7c43d4
+        TODO:
+            - pass awtrix uid wia body automatically
+            - remove awtrix uid from url
+        """
+        try:
+            async with asyncio.timeout(5):
+                data = dict(await request.post())
+        except (TimeoutError, aiohttp.web.HTTPException) as error:
+            _LOGGER.error("Could not get information from POST <%s>", error)
+            return None
+        device_name = webhook_id
+        coordinators =  async_get_coordinator_by_device_name(hass, [device_name])
+        coordinator = next(iter(coordinators), None)
+        if coordinator is not None:
+            button = data["button"]
+            state = data["state"]
+            coordinator.action_press(button, state)
+        return web.Response(text="OK")
+
+    webhook.async_register(
+        hass, DOMAIN, "Awtrix", config_entry.unique_id, handle_webhook
+    )
+
+async def register_webhook_v2(hass: HomeAssistant):
+    """Register webhook V2."""
+
+    async def handle_webhook(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> web.Response:
+        """Handle webhook callback.
+
+        dev.json
+        button_callback: http callback url for button presses.
+        Sample http://hass.local:8123/api/webhook/awtrix
+        TODO:
+            - pass awtrix uid wia body automatically
+            - remove awtrix uid from url
+        """
+        try:
+            async with asyncio.timeout(5):
+                data = dict(await request.post())
+        except (TimeoutError, aiohttp.web.HTTPException) as error:
+            _LOGGER.error("Could not get information from POST <%s>", error)
+            return None
+
+        button = data["button"]
+        state = data["state"]
+        uid = data.get("uid")
+        if uid is not None:
+            coordinators =  async_get_coordinator_by_device_name(hass, [uid])
+            coordinator = next(iter(coordinators), None)
+            if coordinator is not None:
+                coordinator.action_press(button, state)
+        return web.Response(text="OK")
+
+    webhook.async_register(
+        hass, DOMAIN, "Awtrix", "Awtrix-WebHook", handle_webhook
+    )
