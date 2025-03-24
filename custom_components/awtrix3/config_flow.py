@@ -9,8 +9,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-
-# from homeassistant.components import dhcp
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
@@ -21,9 +19,9 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 
-from .awtrix_api import ApiAuthenticationFailed, AwtrixAPI, ApiCannotConnect
+from .awtrix_api import ApiAuthenticationFailed, ApiCannotConnect, AwtrixAPI
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,7 +87,7 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required("auto", default=True): bool}),
         )
 
-    async def async_step_device(self, user_input=None):
+    async def async_step_device(self, user_input=None) -> ConfigFlowResult:
         """Handle auto discovery."""
 
         if user_input:
@@ -137,7 +135,7 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_configure(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Device configuration."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -207,7 +205,7 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except ApiCannotConnect:
             return {"base": "awtrix_error"}, {"error": "Cannot connect to AWTRIX device."}
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle re-authentication of an existing config entry."""
         reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -218,7 +216,7 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth."""
         entry = self._reauth_entry
         errors: dict[str, str] | None = {}
