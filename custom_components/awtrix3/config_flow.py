@@ -9,7 +9,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -20,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .awtrix_api import ApiAuthenticationFailed, ApiCannotConnect, AwtrixAPI
 from .const import DOMAIN
@@ -43,7 +43,7 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device: tuple[dict[str, Any], str] | None = None
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Lan coordinator."""
 
