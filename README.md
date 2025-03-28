@@ -1,13 +1,6 @@
 # homeassistant-custom_components-awtrix
 HASS awtrix 
 
-just add to
-# configuration.yaml 
-
-```
-awtrix:
-```
-
 # example
 
 ```
