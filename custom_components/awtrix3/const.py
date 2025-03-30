@@ -21,6 +21,8 @@ COORDINATORS = "coordinators"
 # Services
 SERVICE_PUSH_APP_DATA = "push_app_data"
 SERVICE_SETTINGS = "settings"
+SERVICE_GET_SETTINGS = "get_settings"
+SERVICE_GET_DEVICE = "get_device"
 SERVICE_SWITCH_APP = "switch_app"
 SERVICE_SOUND = "sound"
 SERVICE_RTTTL = "rtttl"
@@ -28,6 +30,8 @@ SERVICE_RTTTL = "rtttl"
 SERVICES = [
     SERVICE_PUSH_APP_DATA,
     SERVICE_SETTINGS,
+    SERVICE_GET_SETTINGS,
+    SERVICE_GET_DEVICE,
     SERVICE_SOUND,
     SERVICE_RTTTL,
     SERVICE_SWITCH_APP,
@@ -74,6 +78,16 @@ SERVICE_SOUND_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 )
 
 SERVICE_SETTINGS_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+    }, extra=vol.ALLOW_EXTRA,
+)
+
+SERVICE_GET_SETTINGS_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+    }, extra=vol.ALLOW_EXTRA,
+)
+
+SERVICE_GET_DEVICE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
     }, extra=vol.ALLOW_EXTRA,
 )
@@ -193,10 +207,40 @@ SERVICE_SETTINGS_FIELDS = {
     }
 }
 
+SERVICE_GET_SETTINGS_FIELDS = {
+    "device_id": {
+        "description": "device or list of devices",
+        "required": True,
+        "example": "deadbeaf",
+        "selector": {
+            "device": {
+                "integration": "awtrix3",
+                "multiple" : True,
+            }
+        }
+    }
+}
+
+SERVICE_GET_DEVICE_FIELDS = {
+    "device_id": {
+        "description": "device or list of devices",
+        "required": True,
+        "example": "deadbeaf",
+        "selector": {
+            "device": {
+                "integration": "awtrix3",
+                "multiple" : True,
+            }
+        }
+    }
+}
+
 # services fields and schemas
 SERVICE_TO_FIELDS = {
     SERVICE_PUSH_APP_DATA: SERVICE_PUSH_APP_DATA_FIELDS,
     SERVICE_SETTINGS: SERVICE_SETTINGS_FIELDS,
+    SERVICE_GET_SETTINGS: SERVICE_GET_SETTINGS_FIELDS,
+    SERVICE_GET_DEVICE: SERVICE_GET_DEVICE_FIELDS,
     SERVICE_SWITCH_APP: SERVICE_SWITCH_APP_FIELDS,
     SERVICE_RTTTL: SERVICE_RTTTL_FIELDS,
     SERVICE_SOUND: SERVICE_SOUND_FIELDS
@@ -205,6 +249,8 @@ SERVICE_TO_FIELDS = {
 SERVICE_TO_SCHEMA = {
     SERVICE_PUSH_APP_DATA: SERVICE_PUSH_APP_DATA_SCHEMA,
     SERVICE_SETTINGS: SERVICE_SETTINGS_SCHEMA,
+    SERVICE_GET_SETTINGS: SERVICE_GET_SETTINGS_SCHEMA,
+    SERVICE_GET_DEVICE: SERVICE_GET_DEVICE_SCHEMA,
     SERVICE_SWITCH_APP: SERVICE_SWITCH_APP_SCHEMA,
     SERVICE_RTTTL: SERVICE_RTTTL_SCHEMA,
     SERVICE_SOUND: SERVICE_SOUND_SCHEMA

@@ -3,7 +3,7 @@
 from functools import partial
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.helpers.service import async_set_service_schema
 
 from .awtrix import AwtrixService
@@ -28,7 +28,8 @@ class AwtrixServicesSetup:
 
             func = getattr(awtrixService, service)
             if func:
-                await func(call.data)
+                return await func(call.data)
+            return None
 
         awtrixService = AwtrixService(self.hass)
         for service_name in SERVICES:
@@ -36,7 +37,8 @@ class AwtrixServicesSetup:
                 DOMAIN,
                 service_name,
                 partial(service_handler, awtrixService, service_name),
-                schema=SERVICE_TO_SCHEMA[service_name]
+                schema=SERVICE_TO_SCHEMA[service_name],
+                supports_response=SupportsResponse.OPTIONAL
             )
 
             # Register the service description

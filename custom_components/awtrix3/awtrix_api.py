@@ -86,6 +86,14 @@ class AwtrixAPI:
 
         return data
 
+    async def get_config(self) -> dict:
+         """Get config."""
+         return await self.__device_config()
+
+    async def get_device(self) -> dict:
+         """Get device."""
+         return await self.__device_info()
+
     async def __device_info(self):
         """Get device info."""
 

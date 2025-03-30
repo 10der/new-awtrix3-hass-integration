@@ -24,19 +24,26 @@ class AwtrixService:
         """Create API on the fly."""
         result = []
         for device_id in data.get(CONF_DEVICE_ID):
-            coordinator = async_get_coordinator_by_device_id(self.hass, device_id)
-            result.append(coordinator.api)
+            try:
+                coordinator = async_get_coordinator_by_device_id(self.hass, device_id)
+                result.append(coordinator)
+            except Exception:  # noqa: BLE001
+                _LOGGER.error("Failed to coordinator for %s", device_id)
         return result
 
     async def call(self, func, seq):
         """Call action API."""
+        result = []
         for i in seq:
+            uniq_id = i.config_entry.unique_id
             try:
-                await func(i)
+                res =  await func(i.api)
+                result.append({uniq_id: res})
             except Exception:  # noqa: BLE001
                 _LOGGER.error("Failed to call %s: action", i)
+                result.append({uniq_id: False})
 
-        return True
+        return {"result" : result}
 
     async def push_app_data(self, data):
         """Update the application data."""
@@ -73,6 +80,14 @@ class AwtrixService:
         payload.pop(CONF_DEVICE_ID, None)
 
         return await self.call(lambda x: x.device_set_item_value(url, payload), self.api(data))
+
+    async def get_settings(self, data):
+        """Call API get settings."""
+        return await self.call(lambda x: x.get_config(), self.api(data))
+
+    async def get_device(self, data):
+        """Call API get device."""
+        return await self.call(lambda x: x.get_device(), self.api(data))
 
     async def rtttl(self, data):
         """Play rtttl."""
