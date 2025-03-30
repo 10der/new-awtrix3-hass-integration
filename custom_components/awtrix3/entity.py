@@ -17,15 +17,16 @@ class AwtrixEntity(CoordinatorEntity[AwtrixCoordinator]):
     def __init__(self, coordinator: AwtrixCoordinator, key: str) -> None:
         """Initialize the AWTRIX entity."""
         super().__init__(coordinator=coordinator)
+        uid = self.coordinator.data["uid"]
         self._attr_unique_id = generate_entity_id(
-             ENTITY_ID_FORMAT, self.coordinator.data.uid + "_" + key, hass=self.hass)
+             ENTITY_ID_FORMAT, uid + "_" + key, hass=self.hass)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.data.uid)},
-            name=self.coordinator.data.uid,
+            identifiers={(DOMAIN, uid)},
+            name=uid,
             model="AWTRIX 3",
-            sw_version=self.coordinator.data.version,
+            sw_version=self.coordinator.data.get("version"),
             manufacturer="Blueforcer",
-            configuration_url=f"http://{self.coordinator.data.ip_address}",
+            configuration_url=f"http://{self.coordinator.data.get("ip_address")}",
             suggested_area="Work Room"
          )

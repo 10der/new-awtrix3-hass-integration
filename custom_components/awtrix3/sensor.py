@@ -99,7 +99,7 @@ class CommmonSensor(AwtrixEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        value = getattr(self.coordinator.data, self.key, None)
+        value = self.coordinator.data.get(self.key)
         if value is not None:
             if self.value_fn is not None:
                 value = self.value_fn(value)
@@ -127,9 +127,7 @@ class DeviceTemperatureSensor(AwtrixEntity, SensorEntity):
     @property
     def native_value(self) -> int:
         """Return the state of the sensor."""
-        if self.coordinator.data.temp is not None:
-            return self.coordinator.data.temp
-        return None
+        return self.coordinator.data.get("temp")
 
 
 class DeviceHumiditySensor(AwtrixEntity, SensorEntity):
@@ -152,9 +150,7 @@ class DeviceHumiditySensor(AwtrixEntity, SensorEntity):
     @property
     def native_value(self)-> int:
         """Return the state of the sensor."""
-        if self.coordinator.data.hum is not None:
-            return self.coordinator.data.hum
-        return None
+        return self.coordinator.data.get("hum")
 
 
 class LuxSensor(AwtrixEntity, SensorEntity):
@@ -177,9 +173,7 @@ class LuxSensor(AwtrixEntity, SensorEntity):
     @property
     def native_value(self) -> int:
         """Get the current value."""
-        if self.coordinator.data.lux is not None:
-            return round(self.coordinator.data.lux)
-        return None
+        return round(self.coordinator.data.get("lux", 0))
 
 
 class BatteryChargeSensor(AwtrixEntity, SensorEntity):
@@ -202,6 +196,4 @@ class BatteryChargeSensor(AwtrixEntity, SensorEntity):
     @property
     def native_value(self) -> int:
         """Get the current value in percentage."""
-        if self.coordinator.data.bat is not None:
-            return round(self.coordinator.data.bat)
-        return None
+        return round(self.coordinator.data.get("bat", 0))

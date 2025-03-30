@@ -155,21 +155,21 @@ class AwtrixLight(LightEntity, AwtrixEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self.coordinator.data[self.key]
+        return self.coordinator.data.get(self.key)
 
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
 
         if self.key == "matrix":
-            return self.coordinator.data.bri
+            return self.coordinator.data.get("BRI")
 
         return self._brightness
 
     # @property
     # def rgb_color(self) -> tuple[int, int, int] | None:
     #     """Return the color value."""
-    #     # state = self.coordinator.data[self.key]
+    #     # state = self.coordinator.data.get(self.key)
     #     return self._attr_rgb_color
 
     def adjust_brightness(self, color, brightness_percent):

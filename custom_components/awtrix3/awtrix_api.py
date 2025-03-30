@@ -6,8 +6,6 @@ import aiohttp
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .models import AwtrixData
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -48,7 +46,7 @@ class AwtrixAPI:
 
         raise ApiCannotConnect
 
-    async def get_data(self) -> AwtrixData:
+    async def get_data(self) -> dict:
         """Get all actual data from device."""
         # raise ApiCannotConnect
         stats = await self.__device_info()
@@ -59,32 +57,8 @@ class AwtrixAPI:
         if config is None:
             config = {}
 
-        data = AwtrixData()
-        data.bat = stats.get("bat")
-        data.bat_raw = stats.get("bat_raw")
-        data.type = stats.get("type")
-        data.lux = stats.get("lux")
-        data.ldr_raw = stats.get("ldr_raw")
-        data.ram = stats.get("ram")
-        data.bri = stats.get("bri")
-        data.temp = stats.get("temp")
-        data.hum = stats.get("hum")
-        data.uptime = stats.get("uptime")
-        data.wifi_signal = stats.get("wifi_signal")
-        data.messages = stats.get("messages")
-        data.version = stats.get("version")
-        data.indicator1 = stats.get("indicator1")
-        data.indicator2 = stats.get("indicator2")
-        data.indicator3 = stats.get("indicator3")
-        data.app = stats.get("app")
-        data.uid = stats.get("uid")
-        data.matrix = stats.get("matrix")
-        data.ip_address = stats.get("ip_address")
+        return  dict(stats, **config)
 
-        data.abri = config.get("ABRI")
-        data.atrans = config.get("ATRANS")
-
-        return data
 
     async def get_config(self) -> dict:
          """Get config."""

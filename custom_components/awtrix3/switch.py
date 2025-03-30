@@ -25,13 +25,13 @@ async def async_setup_entry(
         AwtrixSwitch(
             hass=hass,
             coordinator=coordinator,
-            key="atrans",
+            key="ATRANS",
             name="Transition",
             icon="mdi:swap-horizontal"),
         AwtrixSwitch(
             hass=hass,
             coordinator=coordinator,
-            key="abri",
+            key="ABRI",
             name="Brightness mode",
             icon="mdi:brightness-auto")
     ])
@@ -62,18 +62,18 @@ class AwtrixSwitch(SwitchEntity, AwtrixEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if self.key == "atrans":
+        if self.key == "ATRANS":
             await self.coordinator.set_value("settings", {"ATRANS": True})
-        if self.key == "abri":
+        if self.key == "ABRI":
             await self.coordinator.set_value("settings", {"ABRI": True})
 
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        if self.key == "atrans":
+        if self.key == "ATRANS":
             await self.coordinator.set_value("settings", {"ATRANS": False})
-        if self.key == "abri":
+        if self.key == "ABRI":
             await self.coordinator.set_value("settings", {"ABRI": False})
 
         await self.coordinator.async_refresh()
@@ -81,5 +81,5 @@ class AwtrixSwitch(SwitchEntity, AwtrixEntity):
     @property
     def state(self) -> str:
         """Return state."""
-        value = getattr(self.coordinator.data, self.key, None)
+        value = self.coordinator.data.get(self.key)
         return "on" if value else "off"

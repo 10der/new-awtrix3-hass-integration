@@ -15,12 +15,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .awtrix_api import ApiCannotConnect, AwtrixAPI
 from .const import DEFAULT_SCAN_INTERVAL
-from .models import AwtrixData
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AwtrixCoordinator(DataUpdateCoordinator[AwtrixData]):
+class AwtrixCoordinator(DataUpdateCoordinator[dict]):
     """My Awtrix coordinator."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -54,7 +53,7 @@ class AwtrixCoordinator(DataUpdateCoordinator[AwtrixData]):
                              username=self.user, password=self.pwd)
         self.on_button_click = {}
 
-    async def async_update_data(self) -> AwtrixData:
+    async def async_update_data(self) -> dict:
         """Fetch data from API endpoint.
 
         This is the place to retrieve and pre-process the data into an appropriate data structure
