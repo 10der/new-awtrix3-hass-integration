@@ -29,7 +29,7 @@ class AwtrixAPI:
             url = "http://" + self.host + "/api/" + key
             response = await async_get_clientsession(self.hass).post(
                 url,
-                timeout=10,
+                timeout=aiohttp.ClientTimeout(total=10),
                 auth=auth,
                 json=value
             )
@@ -60,11 +60,11 @@ class AwtrixAPI:
         return  dict(stats, **config)
 
 
-    async def get_config(self) -> dict:
+    async def get_config(self) -> dict | None:
          """Get config."""
          return await self.__device_config()
 
-    async def get_device(self) -> dict:
+    async def get_device(self) -> dict | None:
          """Get device."""
          return await self.__device_info()
 
@@ -75,7 +75,7 @@ class AwtrixAPI:
             auth = aiohttp.BasicAuth(self.username, self.password)
             response = await async_get_clientsession(self.hass).get(
                 "http://" + self.host + "/api/" + "stats",
-                timeout=10,
+                timeout=aiohttp.ClientTimeout(total=10),
                 auth=auth
             )
             if response.status in (401, 403):
@@ -99,7 +99,7 @@ class AwtrixAPI:
             auth = aiohttp.BasicAuth(self.username, self.password)
             response = await async_get_clientsession(self.hass).get(
                 "http://" + self.host + "/api/" + "settings",
-                timeout=10,
+                timeout=aiohttp.ClientTimeout(total=10),
                 auth=auth
             )
             if response.status in (401, 403):

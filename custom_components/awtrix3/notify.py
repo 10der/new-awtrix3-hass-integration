@@ -1,12 +1,9 @@
 """Support for Awtrix notifications."""
 
 import logging
+from typing import Any
 
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TARGET,
-    BaseNotificationService,
-)
+from homeassistant.components.notify import BaseNotificationService  # type: ignore
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -19,18 +16,23 @@ from .coordinator import AwtrixCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DATA = "data"
+ATTR_TARGET = "target"
+
 async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> BaseNotificationService:
+) -> BaseNotificationService | None:
     """Get the AWTRIX notification service."""
 
     if discovery_info is None:
         return None
 
-    return AwtrixNotificationService(hass=hass,
-                                     coordinator=discovery_info.get("coordinator", None))
+    coordinator = discovery_info.get("coordinator")
+    if coordinator is None:
+        return None
+    return AwtrixNotificationService(hass=hass, coordinator=coordinator)
 
 
 ########################################################################################################
@@ -46,7 +48,7 @@ class AwtrixNotificationService(BaseNotificationService):
         self.hass = hass
         self.coordinator = coordinator
 
-    async def async_send_message(self, message='', **kwargs):
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to some Awtrix device."""
 
         apis = []
@@ -64,8 +66,6 @@ class AwtrixNotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA)
         for api in apis:
             await self.notification(api, message, data)
-
-        return True
 
     async def notification(self, api, message, data):
         """Handle the notification service for Awtrix."""

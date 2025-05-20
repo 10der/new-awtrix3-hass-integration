@@ -8,12 +8,11 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     FLASH_LONG,
     FLASH_SHORT,
-    ColorMode,
     LightEntity,
-    LightEntityFeature,
 )
+from homeassistant.components.light.const import ColorMode, LightEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import AwtrixCoordinator
@@ -66,7 +65,7 @@ async def async_setup_entry(
 
 PARALLEL_UPDATES = 1
 
-class AwtrixLight(LightEntity, AwtrixEntity):
+class AwtrixLight(AwtrixEntity, LightEntity):
     """Representation of a Awtrix light."""
 
     def __init__(
@@ -85,19 +84,17 @@ class AwtrixLight(LightEntity, AwtrixEntity):
         self._attr_name = name or key
         self._brightness = 0
         self._state = False
-        self._available = True
         self._attr_icon = icon
 
-        self._attr_supported_color_modes = {mode}
-        self._attr_color_mode = mode
+        if mode is not None:
+            self._attr_supported_color_modes = {mode}
+            self._attr_color_mode = mode
+        else:
+            self._attr_supported_color_modes = set()
+            self._attr_color_mode = None
         self._attr_supported_features = LightEntityFeature.FLASH
 
         super().__init__(coordinator, key)
-
-    @property
-    def available(self) -> bool:
-        """Return availability."""
-        return self._available
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
@@ -141,6 +138,7 @@ class AwtrixLight(LightEntity, AwtrixEntity):
 
         await self.coordinator.async_refresh()
 
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self._state = False
@@ -152,25 +150,6 @@ class AwtrixLight(LightEntity, AwtrixEntity):
 
         await self.coordinator.async_refresh()
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self.coordinator.data.get(self.key)
-
-    @property
-    def brightness(self) -> int:
-        """Return the brightness of this light between 0..255."""
-
-        if self.key == "matrix":
-            return self.coordinator.data.get("BRI")
-
-        return self._brightness
-
-    # @property
-    # def rgb_color(self) -> tuple[int, int, int] | None:
-    #     """Return the color value."""
-    #     # state = self.coordinator.data.get(self.key)
-    #     return self._attr_rgb_color
 
     def adjust_brightness(self, color, brightness_percent):
         """Adjust the brightness of an RGB color."""
@@ -185,3 +164,25 @@ class AwtrixLight(LightEntity, AwtrixEntity):
 
         # Return the new color tuple
         return (r, g, b)
+
+    def update(self) -> None:
+        """State update callback."""
+        if self.key == "matrix":
+            self._attr_is_on = bool(self.coordinator.data.get("matrix"))
+            self._attr_brightness = int(self.coordinator.data.get("BRI", 0))
+        else:
+            self._attr_is_on = bool(self.coordinator.data.get(self.key))
+            # color = self.coordinator.data.get("color")
+            # if color:
+            #     r = int(color[1:3], 16)
+            #     g = int(color[3:5], 16)
+            #     b = int(color[5:7], 16)
+            #     self._attr_rgb_color = (r, g, b)
+
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor with latest data from coordinator."""
+
+        self.update()

@@ -1,5 +1,7 @@
 """Entity object for shared properties of Awtrix entities."""
 
+from propcache.api import cached_property
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -30,3 +32,8 @@ class AwtrixEntity(CoordinatorEntity[AwtrixCoordinator]):
             configuration_url=f"http://{self.coordinator.data.get("ip_address")}",
             suggested_area="Work Room"
          )
+
+    @cached_property
+    def available(self) -> bool: # type: ignore
+        """Entity gets data from ezviz API so always available."""
+        return True

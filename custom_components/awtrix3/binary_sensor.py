@@ -2,10 +2,9 @@
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import AwtrixCoordinator
 from .entity import AwtrixEntity
 
@@ -42,7 +41,7 @@ async def async_setup_entry(
 
 PARALLEL_UPDATES = 1
 
-class AwtrixBinarySensor(BinarySensorEntity, AwtrixEntity):
+class AwtrixBinarySensor(AwtrixEntity, BinarySensorEntity):
     """representation of a Awtrix binary sensor."""
 
     def __init__(
@@ -61,17 +60,20 @@ class AwtrixBinarySensor(BinarySensorEntity, AwtrixEntity):
         self._state = False
         self._available = True
         self._attr_icon = icon
-        self._state = "off"
+        self._state = False
 
         super().__init__(coordinator, key)
         self.coordinator.on_press(self.key, self.button_click)
 
     def button_click(self, state):
         """Set actual state."""
-        self._state = 'on' if state == "1" else "off"
+        self._state = state == "1"
         self.async_write_ha_state()
 
-    @property
-    def state(self) -> str:
-        """Return state."""
-        return self._state
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor with latest data from coordinator."""
+
+        self._attr_is_on = bool(self.coordinator.data.get(self.key))
+        self.async_write_ha_state()

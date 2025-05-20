@@ -7,7 +7,7 @@ from homeassistant.helpers import config_validation as cv
 
 DOMAIN = "awtrix3"
 
-DEFAULT_SCAN_INTERVAL = 10
+DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 1
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR,

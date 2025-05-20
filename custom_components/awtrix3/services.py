@@ -2,7 +2,6 @@
 
 from functools import partial
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.helpers.service import async_set_service_schema
 
@@ -13,10 +12,9 @@ from .const import DOMAIN, SERVICE_TO_FIELDS, SERVICE_TO_SCHEMA, SERVICES
 class AwtrixServicesSetup:
     """Class to handle Integration Services."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialise services."""
         self.hass = hass
-        self.config_entry = config_entry
 
         hass.async_create_task(self.async_setup_services())
 

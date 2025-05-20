@@ -3,7 +3,7 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -38,8 +38,10 @@ async def async_setup_entry(
 
 PARALLEL_UPDATES = 1
 
-class AwtrixSwitch(SwitchEntity, AwtrixEntity):
+class AwtrixSwitch(AwtrixEntity, SwitchEntity):
     """Representation of a Awtrix switch."""
+
+    #_attr_should_poll = True
 
     def __init__(
         self,
@@ -78,8 +80,9 @@ class AwtrixSwitch(SwitchEntity, AwtrixEntity):
 
         await self.coordinator.async_refresh()
 
-    @property
-    def state(self) -> str:
-        """Return state."""
-        value = self.coordinator.data.get(self.key)
-        return "on" if value else "off"
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor with latest data from coordinator."""
+
+        self._attr_is_on = bool(self.coordinator.data.get(self.key))
+        self.async_write_ha_state()

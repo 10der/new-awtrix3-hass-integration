@@ -40,7 +40,7 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.device_id = None
         self.devices = []
         self.awtrix_config = {}
-        self._discovered_device: tuple[dict[str, Any], str] | None = None
+        self._discovered_device: dict[str, Any] | None = None  #tuple[dict[str, Any], str] | None = None
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -48,8 +48,8 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a discovered Lan coordinator."""
 
         self._discovered_device = {
-            CONF_DEVICE_ID: discovery_info.properties.get("id"),
-            CONF_NAME: discovery_info.properties.get("name"),
+            CONF_DEVICE_ID: discovery_info.properties.get("id", ""),
+            CONF_NAME: discovery_info.properties.get("name", ""),
             CONF_HOST: discovery_info.host
         }
 
@@ -64,6 +64,9 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
 
         device = self._discovered_device
+
+        if device is None:
+            return self.async_abort(reason="no_device_found")
 
         self.device_id = device[CONF_DEVICE_ID]
         self.awtrix_config = {
@@ -208,7 +211,7 @@ class AwtrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle re-authentication of an existing config entry."""
         reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
+            self.context.get("entry_id", "error")
         )
         assert reauth_entry is not None
         self._reauth_entry = reauth_entry

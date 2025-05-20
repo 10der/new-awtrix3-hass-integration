@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -35,8 +35,8 @@ async def async_setup_entry(
             DeviceHumiditySensor(hass=hass, coordinator=coordinator),
             BatteryChargeSensor(hass=hass, coordinator=coordinator),
             LuxSensor(hass=hass, coordinator=coordinator),
-            CommmonSensor(hass=hass, coordinator=coordinator,
-                            key="app", name="Current app"),
+            # CommmonSensor(hass=hass, coordinator=coordinator,
+            #                 key="app", name="Current app"),
             CommmonSensor(hass=hass, coordinator=coordinator,
                             entity_category=EntityCategory.DIAGNOSTIC,
                             key="version", prefix="v", name="Version"),
@@ -47,7 +47,7 @@ async def async_setup_entry(
                             icon="mdi:wifi"),
             CommmonSensor(hass=hass, coordinator=coordinator, key="ip_address",
                             name="IP Address",
-                            state_class=SensorStateClass.MEASUREMENT,
+                            #state_class=SensorStateClass.MEASUREMENT,
                             entity_category=EntityCategory.DIAGNOSTIC,
                             icon="mdi:wan"),
             CommmonSensor(hass=hass, coordinator=coordinator, key="uptime", name="Uptime",
@@ -96,15 +96,20 @@ class CommmonSensor(AwtrixEntity, SensorEntity):
 
         super().__init__(coordinator, key)
 
-    @property
-    def state(self):
-        """Return the state of the sensor."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor with latest data from coordinator."""
+
         value = self.coordinator.data.get(self.key)
         if value is not None:
             if self.value_fn is not None:
                 value = self.value_fn(value)
-            return self.prefix + str(value) + self.suffix
-        return None
+            if self.prefix or self.suffix:
+                self._attr_native_value = self.prefix + str(value) + self.suffix
+            else:
+                self._attr_native_value = value
+
+        self.async_write_ha_state()
 
 
 class DeviceTemperatureSensor(AwtrixEntity, SensorEntity):
@@ -124,11 +129,12 @@ class DeviceTemperatureSensor(AwtrixEntity, SensorEntity):
         self.hass = hass
         super().__init__(coordinator, "temperature")
 
-    @property
-    def native_value(self) -> int:
-        """Return the state of the sensor."""
-        return self.coordinator.data.get("temp")
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor with latest data from coordinator."""
 
+        self._attr_native_value = self.coordinator.data.get("temp", 0)
+        self.async_write_ha_state()
 
 class DeviceHumiditySensor(AwtrixEntity, SensorEntity):
     """Representation of a Sensor."""
@@ -147,11 +153,12 @@ class DeviceHumiditySensor(AwtrixEntity, SensorEntity):
         self.hass = hass
         super().__init__(coordinator, "humidity")
 
-    @property
-    def native_value(self)-> int:
-        """Return the state of the sensor."""
-        return self.coordinator.data.get("hum")
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor with latest data from coordinator."""
 
+        self._attr_native_value = self.coordinator.data.get("hum", 0)
+        self.async_write_ha_state()
 
 class LuxSensor(AwtrixEntity, SensorEntity):
     """Representation of an Awtric Lux sensor."""
@@ -170,10 +177,12 @@ class LuxSensor(AwtrixEntity, SensorEntity):
         self.hass = hass
         super().__init__(coordinator, "lux")
 
-    @property
-    def native_value(self) -> int:
-        """Get the current value."""
-        return round(self.coordinator.data.get("lux", 0))
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor with latest data from coordinator."""
+
+        self._attr_native_value = self.coordinator.data.get("lux", 0)
+        self.async_write_ha_state()
 
 
 class BatteryChargeSensor(AwtrixEntity, SensorEntity):
@@ -193,7 +202,9 @@ class BatteryChargeSensor(AwtrixEntity, SensorEntity):
         self.hass = hass
         super().__init__(coordinator, "battery")
 
-    @property
-    def native_value(self) -> int:
-        """Get the current value in percentage."""
-        return round(self.coordinator.data.get("bat", 0))
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor with latest data from coordinator."""
+
+        self._attr_native_value = self.coordinator.data.get("bat", 0)
+        self.async_write_ha_state()

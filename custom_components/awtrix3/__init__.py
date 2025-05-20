@@ -6,17 +6,17 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-import aiohttp
 from aiohttp import web
+from aiohttp.web_exceptions import HTTPException
 
 from homeassistant.components import webhook
-from homeassistant.components.notify import ConfigType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .common import async_get_coordinator_by_device_name
@@ -41,7 +41,7 @@ class RuntimeData:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Awtrix component."""
 
-    AwtrixServicesSetup(hass, config)
+    AwtrixServicesSetup(hass)
 
     #notifications
     hass.async_create_task(
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) ->
     if not coordinator.data:
         raise ConfigEntryNotReady
 
-    cancel_update_listener = config_entry.async_on_unload(
+    cancel_update_listener: Callable = config_entry.async_on_unload(
         config_entry.add_update_listener(_async_update_listener)
     )
 
@@ -77,7 +77,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    await register_webhook_v1(hass, config_entry)
+    try:
+        await register_webhook_v1(hass, config_entry)
+    except:
+        _LOGGER.warning("Failed to register webhook v1, trying v2")
+        await register_webhook_v2(hass)
 
     # notification (deprecated])
     hass.async_create_task(
@@ -137,9 +141,9 @@ async def register_webhook_v1(hass: HomeAssistant, config_entry):
         try:
             async with asyncio.timeout(5):
                 data = dict(await request.post())
-        except (TimeoutError, aiohttp.web.HTTPException) as error:
+        except (TimeoutError, HTTPException) as error:
             _LOGGER.error("Could not get information from POST <%s>", error)
-            return None
+            return web.Response(text="ERR")
         device_name = webhook_id
         coordinators =  async_get_coordinator_by_device_name(hass, [device_name])
         coordinator = next(iter(coordinators), None)
@@ -147,11 +151,12 @@ async def register_webhook_v1(hass: HomeAssistant, config_entry):
             button = data["button"]
             state = data["state"]
             coordinator.action_press(button, state)
+
         return web.Response(text="OK")
 
-    webhook.async_register(
-        hass, DOMAIN, "Awtrix", config_entry.unique_id, handle_webhook
-    )
+    # webhook.async_register(
+    #     hass, DOMAIN, "Awtrix", config_entry.unique_id, handle_webhook
+    # )
 
 async def register_webhook_v2(hass: HomeAssistant):
     """Register webhook V2."""
@@ -171,18 +176,19 @@ async def register_webhook_v2(hass: HomeAssistant):
         try:
             async with asyncio.timeout(5):
                 data = dict(await request.post())
-        except (TimeoutError, aiohttp.web.HTTPException) as error:
+        except (TimeoutError, HTTPException) as error:
             _LOGGER.error("Could not get information from POST <%s>", error)
-            return None
+            return web.Response(text="ERR")
 
         button = data["button"]
         state = data["state"]
-        uid = data.get("uid")
+        uid = str(data.get("uid"))
         if uid is not None:
             coordinators =  async_get_coordinator_by_device_name(hass, [uid])
             coordinator = next(iter(coordinators), None)
             if coordinator is not None:
                 coordinator.action_press(button, state)
+
         return web.Response(text="OK")
 
     webhook.async_register(

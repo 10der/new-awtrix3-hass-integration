@@ -6,7 +6,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import AwtrixCoordinator
 from .entity import AwtrixEntity
 
@@ -51,7 +50,7 @@ async def async_setup_entry(
 
 PARALLEL_UPDATES = 1
 
-class AwtrixButton(ButtonEntity, AwtrixEntity):
+class AwtrixButton(AwtrixEntity, ButtonEntity):
     """Representation of awtrix button entity."""
 
     def __init__(

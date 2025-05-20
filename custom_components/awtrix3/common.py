@@ -54,7 +54,7 @@ def async_get_coordinator_by_device_id(
 @callback
 def async_get_coordinator_by_device_name(
     hass: HomeAssistant, device_names: list[str]
-) -> AwtrixCoordinator:
+) -> list[AwtrixCoordinator]:
     """Get the Awtrix coordinator for this device name."""
 
     result = []
@@ -64,7 +64,7 @@ def async_get_coordinator_by_device_name(
             if device.name in device_names or device.name_by_user or device.name in device_names:
                 for entry_id in device.config_entries:
                     entry = hass.config_entries.async_get_entry(entry_id)
-                    if entry.domain == DOMAIN:
+                    if entry is not None and entry.domain == DOMAIN:
                         result.append(entry.runtime_data.coordinator)
 
     return result
@@ -72,7 +72,7 @@ def async_get_coordinator_by_device_name(
 @callback
 def async_get_coordinator_devices(
     hass: HomeAssistant,
-) -> AwtrixCoordinator:
+) -> list[AwtrixCoordinator]:
     """Get the Awtrix coordinator for this device ID."""
 
     result = []
@@ -81,7 +81,7 @@ def async_get_coordinator_devices(
         if device.manufacturer == 'Blueforcer':
             for  entry_id in device.config_entries:
                 entry = hass.config_entries.async_get_entry(entry_id)
-                if entry.domain == DOMAIN:
+                if entry is not None and entry.domain == DOMAIN:
                     result.append(entry.runtime_data.coordinator)
 
     return result

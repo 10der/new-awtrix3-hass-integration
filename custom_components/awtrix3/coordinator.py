@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -14,12 +15,12 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .awtrix_api import ApiCannotConnect, AwtrixAPI
-from .const import DEFAULT_SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AwtrixCoordinator(DataUpdateCoordinator[dict]):
+class AwtrixCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """My Awtrix coordinator."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -53,7 +54,7 @@ class AwtrixCoordinator(DataUpdateCoordinator[dict]):
                              username=self.user, password=self.pwd)
         self.on_button_click = {}
 
-    async def async_update_data(self) -> dict:
+    async def async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint.
 
         This is the place to retrieve and pre-process the data into an appropriate data structure
@@ -72,8 +73,23 @@ class AwtrixCoordinator(DataUpdateCoordinator[dict]):
             # This will show entities as unavailable by raising UpdateFailed exception
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
+        self.fire_event({"uid": data.get("uid"), "app": data.get("app")})
+
         # What is returned here is stored in self.data by the DataUpdateCoordinator
         return data
+
+    def fire_event(
+        self,
+        args: dict[str, Any] | None = None,
+    ):
+        """Fire HA event."""
+
+        event_name = f"{DOMAIN}_event"
+        _LOGGER.debug("Firing event `%s` with arguments: %s", event_name, args)
+        self.hass.bus.fire(
+            event_name,
+            args,
+        )
 
     async def set_value(self, key, value):
         """Set device value."""
