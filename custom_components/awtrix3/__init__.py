@@ -35,7 +35,7 @@ class RuntimeData:
     """Class to hold your data."""
 
     coordinator: DataUpdateCoordinator
-    cancel_update_listener: Callable
+    cancel_update_listener: Callable | None = None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -56,6 +56,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
     )
 
+    await register_webhook_v2(hass)
     return True
 
 
@@ -68,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) ->
     if not coordinator.data:
         raise ConfigEntryNotReady
 
-    cancel_update_listener: Callable = config_entry.async_on_unload(
+    cancel_update_listener: Callable | None = config_entry.async_on_unload(
         config_entry.add_update_listener(_async_update_listener)
     )
 
@@ -77,11 +78,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    try:
-        await register_webhook_v1(hass, config_entry)
-    except:
-        _LOGGER.warning("Failed to register webhook v1, trying v2")
-        await register_webhook_v2(hass)
+    # try:
+    #     await register_webhook_v1(hass, config_entry)
+    # except:
+    #     _LOGGER.warning("Failed to register webhook v1, trying v2")
 
     # notification (deprecated])
     hass.async_create_task(
