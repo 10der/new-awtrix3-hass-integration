@@ -1,5 +1,8 @@
-# homeassistant-custom_components-awtrix
-HASS awtrix 
+# homeassistant custom_components awtrix3
+
+[![Buy me a cofee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://www.buymeacoffee.com/10der)
+
+HASS awtrix3
 
 # example
 
