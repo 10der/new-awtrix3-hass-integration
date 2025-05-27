@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .common import async_get_coordinator_by_device_name
 from .const import DOMAIN, PLATFORMS
 from .coordinator import AwtrixCoordinator
-from .services import AwtrixServicesSetup
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,11 +41,11 @@ class RuntimeData:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Awtrix component."""
 
-    AwtrixServicesSetup(hass)
+    # services
+    await async_setup_services(hass)
 
-    #notifications
-    hass.async_create_task(
-        discovery.async_load_platform(
+    # notifications
+    await discovery.async_load_platform(
             hass,
             Platform.NOTIFY,
             DOMAIN,
@@ -54,8 +54,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             },
             config
         )
-    )
 
+    # webhook (buttons)
     await register_webhook_v2(hass)
     return True
 
