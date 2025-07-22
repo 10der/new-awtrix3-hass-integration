@@ -2,9 +2,32 @@
 
 [![Buy me a cofee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://www.buymeacoffee.com/10der)
 
-HASS awtrix3
+HASS Awtrix3
 
-# example
+## Installation
+### Via HACS
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=10der&repository=new-awtrix3-hass-integration&category=Integration)
+
+* Search for "AWTRIX 3 integration" on HACS tab in Home Assistant
+* Click on three dots and use the "Download" option
+* Follow the steps
+* Restart Home Assistant
+* Set up the integration using the UI:
+
+[![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=awtrix3)
+
+
+### Manual Installation (not recommended)
+
+* Copy the entire `custom_components/awtrix_notification/` directory to your server's `<config>/custom_components` directory
+* Restart Home Assistant
+* Set up the integration using the UI:
+
+[![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=awtrix3)
+
+
+# Example
 
 ```
 service: notify.awtrix_bedroom
@@ -70,7 +93,7 @@ data:
   name: Time
 ```
 
-# back
+# Back
 
 ```
 service: awtrix.awtrix_bedroom_settings
