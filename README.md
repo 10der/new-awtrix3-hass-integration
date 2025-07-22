@@ -4,7 +4,7 @@
 
 HASS Awtrix3
 
-## Installation
+# Installation
 ### Via HACS
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=10der&repository=new-awtrix3-hass-integration&category=Integration)
