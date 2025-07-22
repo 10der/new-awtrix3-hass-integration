@@ -20,7 +20,7 @@ HASS Awtrix3
 
 ### Manual Installation (not recommended)
 
-* Copy the entire `custom_components/awtrix_notification/` directory to your server's `<config>/custom_components` directory
+* Copy the entire `custom_components/awtrix3/` directory to your server's `<config>/custom_components` directory
 * Restart Home Assistant
 * Set up the integration using the UI:
 
