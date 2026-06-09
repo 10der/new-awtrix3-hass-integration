@@ -73,7 +73,7 @@ class AwtrixCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # This will show entities as unavailable by raising UpdateFailed exception
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-        self.fire_event({"uid": data.get("uid"), "app": data.get("app")})
+        # self.fire_event({"uid": data.get("uid"), "app": data.get("app")})
 
         # What is returned here is stored in self.data by the DataUpdateCoordinator
         return data
