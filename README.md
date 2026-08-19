@@ -4,6 +4,10 @@
 
 HASS Awtrix3
 
+### new AWTRIX FW support
+# https://github.com/10der/awtrix-ng-hass-integration
+
+
 # Installation
 ### Via HACS
 
